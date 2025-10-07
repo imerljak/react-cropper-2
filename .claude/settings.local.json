@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ollama run deepseek-r1 \"I''m building a React wrapper library for CropperJS 2.x (web components). The library should:\n- Wrap CropperJS 2.x web components for React\n- Be TypeScript-first with full type safety\n- Use modern React patterns (hooks, refs)\n- Support TDD approach\n- Follow best practices for library development\n\nWhat should be the architecture? What''s the recommended project structure? What testing strategy should I use? Keep it practical and actionable.\")",
+      "Bash(npm run lint)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm test:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nchore: initialize project with build tooling and configuration\n\n- Set up TypeScript with strict mode configuration\n- Configure Vite for library bundling (dual ESM/CJS output)\n- Set up Vitest and React Testing Library for testing\n- Add ESLint and Prettier for code quality\n- Configure VS Code settings and extensions\n- Add MIT license\n- Create .gitignore with proper exclusions\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
