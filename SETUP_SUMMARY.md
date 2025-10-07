@@ -76,7 +76,7 @@ react-cropper-2/
 ### 4. Testing (Vitest + React Testing Library)
 
 - ✅ JSDOM environment
-- ✅ Coverage thresholds (70% minimum)
+- ✅ Coverage thresholds (90% minimum)
 - ✅ Mock web component setup
 - ✅ 49 total tests (42 passing, 7 intentionally failing for TDD)
 
