@@ -48,11 +48,6 @@ Thumbs.db
 *.temp
 .cache/
 
-# Package manager files
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-
 # Local development
 .eslintcache
 .vite/
