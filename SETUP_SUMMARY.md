@@ -1,6 +1,7 @@
 # React Cropper 2 - Project Setup Summary
 
 ## Overview
+
 Complete React library project setup for `react-cropper-2`, a modern React wrapper for CropperJS 2.x web components. Built with TypeScript, Vite, and following TDD best practices.
 
 ## Project Structure
@@ -49,6 +50,7 @@ react-cropper-2/
 ## Key Features Implemented
 
 ### 1. Package Configuration (`package.json`)
+
 - ✅ Dual output: ESM + CommonJS
 - ✅ Proper module exports for modern bundlers
 - ✅ Peer dependencies: React 18+, CropperJS 2.x
@@ -56,6 +58,7 @@ react-cropper-2/
 - ✅ Tree-shakable with `sideEffects: false`
 
 ### 2. TypeScript Setup (Strict Mode)
+
 - ✅ `strict: true` with all strict flags enabled
 - ✅ `exactOptionalPropertyTypes: true`
 - ✅ `noUncheckedIndexedAccess: true`
@@ -63,6 +66,7 @@ react-cropper-2/
 - ✅ Full type safety and IDE autocomplete
 
 ### 3. Build System (Vite)
+
 - ✅ Library mode configuration
 - ✅ Dual format output (ES + CJS)
 - ✅ Source maps enabled
@@ -70,12 +74,14 @@ react-cropper-2/
 - ✅ Type declaration generation with `vite-plugin-dts`
 
 ### 4. Testing (Vitest + React Testing Library)
+
 - ✅ JSDOM environment
-- ✅ Coverage thresholds (80% minimum)
+- ✅ Coverage thresholds (70% minimum)
 - ✅ Mock web component setup
 - ✅ 49 total tests (42 passing, 7 intentionally failing for TDD)
 
 ### 5. Code Quality Tools
+
 - ✅ ESLint with TypeScript strict rules
 - ✅ React-specific linting (hooks, refresh)
 - ✅ Prettier for consistent formatting
@@ -110,6 +116,7 @@ npm run prepublishOnly   # Pre-publish checks (auto-runs)
 ## Test Results (TDD Approach)
 
 ### Cropper Component Tests (25/25 passing ✅)
+
 - ✅ Rendering tests (5/5)
 - ✅ Props configuration tests (5/5)
 - ✅ Event handlers tests (6/6)
@@ -117,6 +124,7 @@ npm run prepublishOnly   # Pre-publish checks (auto-runs)
 - ✅ Edge cases tests (3/3)
 
 ### useCropper Hook Tests (17/24 passing, 7 intentionally failing)
+
 - ✅ Initialization tests (5/5)
 - ✅ getBounds tests (3/3)
 - ✅ setBounds tests (2/3) - 1 failing (TDD)
@@ -150,16 +158,18 @@ dist/index.d.ts     6.9 KB - TypeScript definitions
 
 3. **Exported Types**
    ```typescript
-   - CropperProps, CropperRef
-   - UseCropperOptions, UseCropperReturn
-   - CropperBounds, CropperTransform
-   - CropperCanvasElement, CropperSelectionElement
-   - CropperEvent, CropperEventHandler
+   (-CropperProps,
+     CropperRef - UseCropperOptions,
+     UseCropperReturn - CropperBounds,
+     CropperTransform - CropperCanvasElement,
+     CropperSelectionElement - CropperEvent,
+     CropperEventHandler);
    ```
 
 ## Example Usage
 
 ### Component Approach
+
 ```tsx
 import { Cropper, CropperRef } from 'react-cropper-2';
 
@@ -170,7 +180,7 @@ function App() {
     <Cropper
       ref={cropperRef}
       src="/image.jpg"
-      aspectRatio={16/9}
+      aspectRatio={16 / 9}
       onReady={() => console.log('Ready!')}
       onChange={(e) => console.log(e.detail.bounds)}
     />
@@ -179,6 +189,7 @@ function App() {
 ```
 
 ### Hook Approach
+
 ```tsx
 import { useCropper } from 'react-cropper-2';
 
@@ -209,18 +220,21 @@ function App() {
 ## Development Workflow
 
 1. **Start Development**:
+
    ```bash
    npm install
    npm run dev  # Starts example app at http://localhost:3000
    ```
 
 2. **Run Tests** (TDD):
+
    ```bash
    npm test  # Watch mode
    npm run test:ui  # Interactive UI
    ```
 
 3. **Build Library**:
+
    ```bash
    npm run build
    ```
@@ -245,6 +259,7 @@ function App() {
 ## Project Status
 
 ✅ **Setup Complete** - Ready for TDD implementation
+
 - All tooling configured and verified
 - Build system working (ESM + CJS)
 - Type safety enforced
@@ -253,6 +268,7 @@ function App() {
 - Zero linting/type errors
 
 🔄 **Next Phase** - Fix failing tests and implement features
+
 - 7 tests intentionally failing (TDD approach)
 - Hook functionality needs completion
 - Event handling needs refinement
