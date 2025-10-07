@@ -52,5 +52,8 @@ Thumbs.db
 .eslintcache
 .vite/
 
+# LLM
+.claude/*.local.*
+
 # Testing
 .vitest/
