@@ -1,0 +1,122 @@
+name: PR Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr-info:
+    name: PR Information
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: PR Stats
+        run: |
+          echo "### PR Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Files changed:** $(git diff --name-only origin/${{ github.base_ref }}...HEAD | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Lines added:** $(git diff --shortstat origin/${{ github.base_ref }}...HEAD | grep -oE '[0-9]+ insertion' | grep -oE '[0-9]+' || echo 0)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Lines deleted:** $(git diff --shortstat origin/${{ github.base_ref }}...HEAD | grep -oE '[0-9]+ deletion' | grep -oE '[0-9]+' || echo 0)" >> $GITHUB_STEP_SUMMARY
+
+  conventional-commits:
+    name: Verify Conventional Commits
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check commit messages
+        run: |
+          COMMITS=$(git log origin/${{ github.base_ref }}..HEAD --pretty=format:"%s")
+          VALID=true
+
+          while IFS= read -r commit; do
+            if ! echo "$commit" | grep -qE "^(feat|fix|docs|style|refactor|perf|test|chore)(\(.+\))?: .+"; then
+              echo "❌ Invalid commit message: $commit"
+              VALID=false
+            else
+              echo "✅ Valid commit message: $commit"
+            fi
+          done <<< "$COMMITS"
+
+          if [ "$VALID" = false ]; then
+            echo ""
+            echo "Commits must follow Conventional Commits format:"
+            echo "  type(scope?): subject"
+            echo ""
+            echo "Types: feat, fix, docs, style, refactor, perf, test, chore"
+            exit 1
+          fi
+
+  size-check:
+    name: Bundle Size Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Check bundle size
+        run: |
+          ESM_SIZE=$(du -b dist/index.js | cut -f1)
+          CJS_SIZE=$(du -b dist/index.cjs | cut -f1)
+
+          echo "### Bundle Sizes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Format | Size | Gzipped |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ESM | $(numfmt --to=iec $ESM_SIZE) | $(gzip -c dist/index.js | wc -c | numfmt --to=iec) |" >> $GITHUB_STEP_SUMMARY
+          echo "| CJS | $(numfmt --to=iec $CJS_SIZE) | $(gzip -c dist/index.cjs | wc -c | numfmt --to=iec) |" >> $GITHUB_STEP_SUMMARY
+
+          # Warn if bundle size exceeds 10KB
+          if [ $ESM_SIZE -gt 10240 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ Warning: ESM bundle size exceeds 10KB" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  test-coverage:
+    name: Test Coverage Report
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm test -- --run --coverage
+
+      - name: Coverage Summary
+        run: |
+          echo "### Test Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat coverage/coverage-summary.json | jq -r '.total | "Statements: \(.statements.pct)%\nBranches: \(.branches.pct)%\nFunctions: \(.functions.pct)%\nLines: \(.lines.pct)%"' >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
