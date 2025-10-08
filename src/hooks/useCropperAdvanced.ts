@@ -191,6 +191,11 @@ export function useCropperAdvanced(options: UseCropperAdvancedOptions = {}): Use
     async (options?: GetCroppedCanvasOptions): Promise<HTMLCanvasElement | null> => {
       const selection = selectionRef.current;
       if (!selection) return null;
+      // Check if the $toCanvas method exists (web component might not be fully initialized)
+      if (typeof selection.$toCanvas !== 'function') {
+        console.warn('CropperJS selection element not fully initialized');
+        return null;
+      }
       return selection.$toCanvas(options);
     },
     []
@@ -220,11 +225,27 @@ export function useCropperAdvanced(options: UseCropperAdvancedOptions = {}): Use
 
     if (!canvas || !selection) return;
 
-    // Initialize
-    setIsReady(true);
-    if (onReadyRef.current) {
-      onReadyRef.current(canvas);
-    }
+    // Wait for web component to be fully initialized
+    // CropperJS web components need time to set up their methods
+    let rafId: number | null = null;
+    let cancelled = false;
+
+    const checkReady = (): void => {
+      if (cancelled) return;
+
+      if (typeof selection.$toCanvas === 'function') {
+        // Web component is ready
+        setIsReady(true);
+        if (onReadyRef.current) {
+          onReadyRef.current(canvas);
+        }
+      } else {
+        // Not ready yet, check again on next frame
+        rafId = requestAnimationFrame(checkReady);
+      }
+    };
+
+    checkReady();
 
     // Update bounds on change
     const handleChange: CropperEventHandler = (event) => {
@@ -269,6 +290,10 @@ export function useCropperAdvanced(options: UseCropperAdvancedOptions = {}): Use
 
     // Cleanup
     return () => {
+      cancelled = true;
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
       handlers.forEach(({ element, event, handler }) => {
         element.removeEventListener(event, handler);
       });

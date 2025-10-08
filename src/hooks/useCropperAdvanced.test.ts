@@ -41,6 +41,7 @@ describe('useCropper Hook', () => {
       $moveTo: vi.fn(),
       $resize: vi.fn(),
       $zoom: vi.fn(),
+      $toCanvas: vi.fn().mockResolvedValue(document.createElement('canvas')),
     });
 
     document.body.appendChild(mockCanvas);
