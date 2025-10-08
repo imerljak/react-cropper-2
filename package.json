@@ -54,7 +54,7 @@
     "prepublishOnly": "npm run typecheck && npm run lint && npm run test && npm run build"
   },
   "peerDependencies": {
-    "cropperjs": "^2.0.0-beta",
+    "cropperjs": "^2.0.1",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },
