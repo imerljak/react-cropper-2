@@ -233,8 +233,13 @@ export function useCropperAdvanced(options: UseCropperAdvancedOptions = {}): Use
     const checkReady = (): void => {
       if (cancelled) return;
 
-      if (typeof selection.$toCanvas === 'function') {
-        // Web component is ready
+      // Check if web component methods exist AND selection has valid bounds
+      if (
+        typeof selection.$toCanvas === 'function' &&
+        selection.width > 0 &&
+        selection.height > 0
+      ) {
+        // Web component is ready with valid selection
         setIsReady(true);
         if (onReadyRef.current) {
           onReadyRef.current(canvas);
