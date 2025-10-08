@@ -1,7 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
 import { Cropper, useCropper, type CropperRef, type CropperBounds } from '../../../src';
-// Import CropperJS web components
-import 'cropperjs';
 
 function App(): JSX.Element {
   const cropperRef = useRef<CropperRef>(null);
