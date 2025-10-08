@@ -3,6 +3,9 @@
 > A modern React wrapper for CropperJS 2.x
 
 [![npm version](https://img.shields.io/npm/v/@imerljak/react-cropper-2.svg)](https://www.npmjs.com/package/@imerljak/react-cropper-2)
+[![npm downloads](https://img.shields.io/npm/dm/@imerljak/react-cropper-2.svg)](https://www.npmjs.com/package/@imerljak/react-cropper-2)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/@imerljak/react-cropper-2)](https://bundlephobia.com/package/@imerljak/react-cropper-2)
+[![CI](https://github.com/imerljak/react-cropper-2/actions/workflows/ci.yml/badge.svg)](https://github.com/imerljak/react-cropper-2/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A TypeScript-first React library that provides idiomatic React bindings for [CropperJS 2.x](https://github.com/fengyuanchen/cropperjs) web components.
