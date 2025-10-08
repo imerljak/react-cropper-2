@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act, render } from '@testing-library/react';
-import { useCropper } from './useCropper';
 import type { CropperBounds } from '../types';
 import { createElement } from 'react';
-import type { UseCropperOptions, UseCropperReturn } from './useCropper';
+import {
+  useCropperAdvanced,
+  UseCropperAdvancedOptions,
+  UseCropperAdvancedReturn,
+} from './useCropperAdvanced';
 
 /**
  * Test suite for useCropper hook
@@ -46,12 +49,14 @@ describe('useCropper Hook', () => {
 
   // Helper to properly test hooks with refs attached
   function renderHookWithRefs(
-    options: UseCropperOptions = {}
-  ): ReturnType<typeof render> & { result: { current: UseCropperReturn } } {
-    let hookReturn: UseCropperReturn | null = null;
+    options: UseCropperAdvancedOptions = {}
+  ): ReturnType<typeof render> & {
+    result: { current: UseCropperAdvancedReturn };
+  } {
+    let hookReturn: UseCropperAdvancedReturn | null = null;
 
     function TestComponent(): null {
-      const hook = useCropper(options);
+      const hook = useCropperAdvanced(options);
       hookReturn = hook;
 
       // Attach refs immediately on first render
@@ -77,7 +82,7 @@ describe('useCropper Hook', () => {
 
     return {
       result: {
-        get current(): UseCropperReturn {
+        get current(): UseCropperAdvancedReturn {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           return hookReturn!;
         },
@@ -88,7 +93,7 @@ describe('useCropper Hook', () => {
 
   describe('Initialization', () => {
     it('should initialize with default values', () => {
-      const { result } = renderHook(() => useCropper());
+      const { result } = renderHook(() => useCropperAdvanced());
 
       expect(result.current.canvasRef.current).toBeNull();
       expect(result.current.selectionRef.current).toBeNull();
@@ -97,7 +102,7 @@ describe('useCropper Hook', () => {
     });
 
     it('should provide refs for canvas and selection', () => {
-      const hookResult = renderHook(() => useCropper());
+      const hookResult = renderHook(() => useCropperAdvanced());
 
       expect(hookResult.result.current.canvasRef).toBeDefined();
       expect(hookResult.result.current.selectionRef).toBeDefined();
@@ -114,7 +119,7 @@ describe('useCropper Hook', () => {
 
     it('should not auto-initialize when autoInitialize is false', () => {
       const onReady = vi.fn();
-      renderHook(() => useCropper({ onReady, autoInitialize: false }));
+      renderHook(() => useCropperAdvanced({ onReady, autoInitialize: false }));
 
       expect(onReady).not.toHaveBeenCalled();
     });
@@ -130,14 +135,14 @@ describe('useCropper Hook', () => {
 
   describe('getBounds', () => {
     it('should return null when selection is not set', () => {
-      const { result } = renderHook(() => useCropper());
+      const { result } = renderHook(() => useCropperAdvanced());
 
       const bounds = result.current.getBounds();
       expect(bounds).toBeNull();
     });
 
     it('should return bounds from selection element', () => {
-      const { result } = renderHook(() => useCropper());
+      const { result } = renderHook(() => useCropperAdvanced());
 
       // Set selection ref
       Object.defineProperty(result.current.selectionRef, 'current', {
@@ -157,7 +162,7 @@ describe('useCropper Hook', () => {
 
   describe('setBounds', () => {
     it('should update bounds on selection element', () => {
-      const { result } = renderHook(() => useCropper());
+      const { result } = renderHook(() => useCropperAdvanced());
 
       Object.defineProperty(result.current.selectionRef, 'current', {
         value: mockSelection,
@@ -173,7 +178,12 @@ describe('useCropper Hook', () => {
 
       result.current.setBounds(newBounds);
 
-      expect((mockSelection as any).$change).toHaveBeenCalledWith(50, 60, 200, 150);
+      expect((mockSelection as any).$change).toHaveBeenCalledWith(
+        50,
+        60,
+        200,
+        150
+      );
     });
 
     it('should update local bounds state after setBounds', async () => {
@@ -191,7 +201,7 @@ describe('useCropper Hook', () => {
     });
 
     it('should handle null selection gracefully', () => {
-      const { result } = renderHook(() => useCropper());
+      const { result } = renderHook(() => useCropperAdvanced());
 
       expect(() => {
         result.current.setBounds({ x: 10, y: 20 });
@@ -201,7 +211,7 @@ describe('useCropper Hook', () => {
 
   describe('reset', () => {
     it('should call reset on selection element', () => {
-      const { result } = renderHook(() => useCropper());
+      const { result } = renderHook(() => useCropperAdvanced());
 
       Object.defineProperty(result.current.selectionRef, 'current', {
         value: mockSelection,
@@ -228,7 +238,7 @@ describe('useCropper Hook', () => {
     });
 
     it('should handle null selection gracefully', () => {
-      const { result } = renderHook(() => useCropper());
+      const { result } = renderHook(() => useCropperAdvanced());
 
       expect(() => {
         result.current.reset();
@@ -238,7 +248,7 @@ describe('useCropper Hook', () => {
 
   describe('clear', () => {
     it('should call clear on selection element', () => {
-      const { result } = renderHook(() => useCropper());
+      const { result } = renderHook(() => useCropperAdvanced());
 
       Object.defineProperty(result.current.selectionRef, 'current', {
         value: mockSelection,
@@ -251,7 +261,7 @@ describe('useCropper Hook', () => {
     });
 
     it('should set bounds to null after clear', () => {
-      const { result } = renderHook(() => useCropper());
+      const { result } = renderHook(() => useCropperAdvanced());
 
       Object.defineProperty(result.current.selectionRef, 'current', {
         value: mockSelection,
@@ -264,7 +274,7 @@ describe('useCropper Hook', () => {
     });
 
     it('should handle null selection gracefully', () => {
-      const { result } = renderHook(() => useCropper());
+      const { result } = renderHook(() => useCropperAdvanced());
 
       expect(() => {
         result.current.clear();
@@ -326,7 +336,7 @@ describe('useCropper Hook', () => {
     it('should cleanup event listeners on unmount', () => {
       const onChange = vi.fn();
       const { result, unmount, rerender } = renderHook(() =>
-        useCropper({ onChange })
+        useCropperAdvanced({ onChange })
       );
 
       Object.defineProperty(result.current.canvasRef, 'current', {
@@ -350,7 +360,7 @@ describe('useCropper Hook', () => {
 
   describe('Utility Methods', () => {
     it('should return canvas element via getCanvas', () => {
-      const { result } = renderHook(() => useCropper());
+      const { result } = renderHook(() => useCropperAdvanced());
 
       Object.defineProperty(result.current.canvasRef, 'current', {
         value: mockCanvas,
@@ -362,7 +372,7 @@ describe('useCropper Hook', () => {
     });
 
     it('should return selection element via getSelection', () => {
-      const { result } = renderHook(() => useCropper());
+      const { result } = renderHook(() => useCropperAdvanced());
 
       Object.defineProperty(result.current.selectionRef, 'current', {
         value: mockSelection,
@@ -374,7 +384,7 @@ describe('useCropper Hook', () => {
     });
 
     it('should return null when elements not set', () => {
-      const { result } = renderHook(() => useCropper());
+      const { result } = renderHook(() => useCropperAdvanced());
 
       expect(result.current.getCanvas()).toBeNull();
       expect(result.current.getSelection()).toBeNull();

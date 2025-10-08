@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { Cropper, type CropperRef } from './Cropper';
@@ -164,7 +165,7 @@ describe('Cropper Component', () => {
 
   describe('Ref Methods', () => {
     it('should expose getCanvas method via ref', () => {
-      const ref = { current: null } as React.RefObject<CropperRef>;
+      const ref = { current: null } as unknown as React.RefObject<CropperRef>;
       render(<Cropper ref={ref} src="/test-image.jpg" />);
 
       expect(ref.current.getCanvas).toBeDefined();
@@ -172,7 +173,7 @@ describe('Cropper Component', () => {
     });
 
     it('should expose getSelection method via ref', () => {
-      const ref = { current: null } as React.RefObject<CropperRef>;
+      const ref = { current: null } as unknown as React.RefObject<CropperRef>;
       render(<Cropper ref={ref} src="/test-image.jpg" />);
 
       expect(ref.current.getSelection).toBeDefined();
@@ -180,7 +181,7 @@ describe('Cropper Component', () => {
     });
 
     it('should expose getBounds method via ref', () => {
-      const ref = { current: null } as React.RefObject<CropperRef>;
+      const ref = { current: null } as unknown as React.RefObject<CropperRef>;
       render(<Cropper ref={ref} src="/test-image.jpg" />);
 
       expect(ref.current.getBounds).toBeDefined();
@@ -188,7 +189,7 @@ describe('Cropper Component', () => {
     });
 
     it('should expose setBounds method via ref', () => {
-      const ref = { current: null } as React.RefObject<CropperRef>;
+      const ref = { current: null } as unknown as React.RefObject<CropperRef>;
       render(<Cropper ref={ref} src="/test-image.jpg" />);
 
       expect(ref.current.setBounds).toBeDefined();
@@ -196,7 +197,7 @@ describe('Cropper Component', () => {
     });
 
     it('should expose reset method via ref', () => {
-      const ref = { current: null } as React.RefObject<CropperRef>;
+      const ref = { current: null } as unknown as React.RefObject<CropperRef>;
       render(<Cropper ref={ref} src="/test-image.jpg" />);
 
       expect(ref.current.reset).toBeDefined();
@@ -204,7 +205,7 @@ describe('Cropper Component', () => {
     });
 
     it('should expose clear method via ref', () => {
-      const ref = { current: null } as React.RefObject<CropperRef>;
+      const ref = { current: null } as unknown as React.RefObject<CropperRef>;
       render(<Cropper ref={ref} src="/test-image.jpg" />);
 
       expect(ref.current.clear).toBeDefined();
@@ -216,7 +217,7 @@ describe('Cropper Component', () => {
     it('should handle missing alt text gracefully', () => {
       render(<Cropper src="/test-image.jpg" />);
 
-      const img = document.querySelector('img');
+      const img = document.querySelector('cropper-image');
       expect(img).toHaveAttribute('alt', '');
     });
 

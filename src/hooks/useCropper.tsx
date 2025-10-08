@@ -1,11 +1,15 @@
 import { useCallback, type CSSProperties, type JSX } from 'react';
-import { useCropperAdvanced, type UseCropperAdvancedOptions } from './useCropperAdvanced';
+import {
+  useCropperAdvanced,
+  type UseCropperAdvancedOptions,
+} from './useCropperAdvanced';
 import type { CropperBounds } from '../types';
 
 /**
  * Configuration options for useCropper hook
  */
-export interface UseCropperOptions extends Omit<UseCropperAdvancedOptions, 'autoInitialize'> {
+export interface UseCropperOptions
+  extends Omit<UseCropperAdvancedOptions, 'autoInitialize'> {
   /** Image source URL */
   src: string;
   /** Image alt text */
@@ -49,7 +53,10 @@ export interface GetCroppedCanvasOptions {
   /** Height of the output canvas */
   height?: number;
   /** Callback before drawing the image onto the canvas */
-  beforeDraw?: (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => void;
+  beforeDraw?: (
+    context: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement
+  ) => void;
 }
 
 /**
@@ -74,7 +81,9 @@ export interface UseCropperReturn {
   /** Clear the selection */
   clear: () => void;
   /** Get the cropped area as a canvas element */
-  getCroppedCanvas: (options?: GetCroppedCanvasOptions) => Promise<HTMLCanvasElement | null>;
+  getCroppedCanvas: (
+    options?: GetCroppedCanvasOptions
+  ) => Promise<HTMLCanvasElement | null>;
 }
 
 /**
@@ -144,7 +153,7 @@ export function useCropper(options: UseCropperOptions): UseCropperReturn {
 
   const renderCropper = useCallback(
     (props?: { className?: string; style?: CSSProperties }): JSX.Element => {
-      const { className, style } = props || {};
+      const { className, style } = props ?? {};
 
       return (
         <cropper-canvas
@@ -175,7 +184,10 @@ export function useCropper(options: UseCropperOptions): UseCropperReturn {
           >
             <cropper-grid role="grid" bordered covered />
             <cropper-crosshair centered />
-            <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)" />
+            <cropper-handle
+              action="move"
+              theme-color="rgba(255, 255, 255, 0.35)"
+            />
             <cropper-handle action="n-resize" />
             <cropper-handle action="e-resize" />
             <cropper-handle action="s-resize" />
