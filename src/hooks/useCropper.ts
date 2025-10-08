@@ -104,25 +104,38 @@ export function useCropper(options: UseCropperOptions = {}): UseCropperReturn {
     onCropEndRef.current = onCropEnd;
   });
 
-  // Get current bounds
+  // Get current bounds from selection properties
   const getBounds = useCallback((): CropperBounds | null => {
     const selection = selectionRef.current;
     if (!selection) return null;
 
     try {
-      return selection.getBounds();
+      return {
+        x: selection.x,
+        y: selection.y,
+        width: selection.width,
+        height: selection.height,
+      };
     } catch {
       return null;
     }
   }, []);
 
-  // Set bounds
+  // Set bounds using $change method
   const setBounds = useCallback(
     (newBounds: Partial<CropperBounds>): void => {
       const selection = selectionRef.current;
       if (!selection) return;
 
-      selection.setBounds(newBounds);
+      const currentBounds = getBounds();
+      if (!currentBounds) return;
+
+      const x = newBounds.x ?? currentBounds.x;
+      const y = newBounds.y ?? currentBounds.y;
+      const width = newBounds.width ?? currentBounds.width;
+      const height = newBounds.height ?? currentBounds.height;
+
+      selection.$change(x, y, width, height);
 
       // Update local state
       const updatedBounds = getBounds();
@@ -133,12 +146,12 @@ export function useCropper(options: UseCropperOptions = {}): UseCropperReturn {
     [getBounds]
   );
 
-  // Reset cropper
+  // Reset cropper using $reset method
   const reset = useCallback((): void => {
     const selection = selectionRef.current;
     if (!selection) return;
 
-    selection.reset();
+    selection.$reset();
 
     // Update local state
     const updatedBounds = getBounds();
@@ -147,12 +160,12 @@ export function useCropper(options: UseCropperOptions = {}): UseCropperReturn {
     }
   }, [getBounds]);
 
-  // Clear selection
+  // Clear selection using $clear method
   const clear = useCallback((): void => {
     const selection = selectionRef.current;
     if (!selection) return;
 
-    selection.clear();
+    selection.$clear();
     setBoundsState(null);
   }, []);
 

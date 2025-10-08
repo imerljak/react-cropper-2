@@ -19,17 +19,25 @@ describe('useCropper Hook', () => {
     mockCanvas = document.createElement('div');
     mockSelection = document.createElement('div');
 
-    // Add mock methods to selection
+    // Add mock properties and methods to selection matching CropperJS 2.x API
     Object.assign(mockSelection, {
-      getBounds: vi.fn(() => ({
-        x: 10,
-        y: 20,
-        width: 100,
-        height: 80,
-      })),
-      setBounds: vi.fn(),
-      reset: vi.fn(),
-      clear: vi.fn(),
+      // Properties
+      x: 10,
+      y: 20,
+      width: 100,
+      height: 80,
+      aspectRatio: 0,
+      initialAspectRatio: 0,
+      initialCoverage: 0.8,
+      // Methods (prefixed with $)
+      $change: vi.fn(),
+      $reset: vi.fn(),
+      $clear: vi.fn(),
+      $center: vi.fn(),
+      $move: vi.fn(),
+      $moveTo: vi.fn(),
+      $resize: vi.fn(),
+      $zoom: vi.fn(),
     });
 
     document.body.appendChild(mockCanvas);
@@ -145,29 +153,6 @@ describe('useCropper Hook', () => {
         height: 80,
       });
     });
-
-    it('should handle errors gracefully', () => {
-      const { result } = renderHook(() => useCropper());
-
-      // Set selection ref with throwing getBounds - create a new object instead of spreading
-      const errorSelection = document.createElement('div');
-      Object.assign(errorSelection, {
-        getBounds: vi.fn(() => {
-          throw new Error('Test error');
-        }),
-        setBounds: vi.fn(),
-        reset: vi.fn(),
-        clear: vi.fn(),
-      });
-
-      Object.defineProperty(result.current.selectionRef, 'current', {
-        value: errorSelection,
-        writable: true,
-      });
-
-      const bounds = result.current.getBounds();
-      expect(bounds).toBeNull();
-    });
   });
 
   describe('setBounds', () => {
@@ -188,7 +173,7 @@ describe('useCropper Hook', () => {
 
       result.current.setBounds(newBounds);
 
-      expect(mockSelection.setBounds).toHaveBeenCalledWith(newBounds);
+      expect((mockSelection as any).$change).toHaveBeenCalledWith(50, 60, 200, 150);
     });
 
     it('should update local bounds state after setBounds', async () => {
@@ -225,7 +210,7 @@ describe('useCropper Hook', () => {
 
       result.current.reset();
 
-      expect(mockSelection.reset).toHaveBeenCalledTimes(1);
+      expect((mockSelection as any).$reset).toHaveBeenCalledTimes(1);
     });
 
     it('should update bounds state after reset', async () => {
@@ -262,7 +247,7 @@ describe('useCropper Hook', () => {
 
       result.current.clear();
 
-      expect(mockSelection.clear).toHaveBeenCalledTimes(1);
+      expect((mockSelection as any).$clear).toHaveBeenCalledTimes(1);
     });
 
     it('should set bounds to null after clear', () => {

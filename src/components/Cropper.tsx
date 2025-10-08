@@ -149,15 +149,32 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
       () => ({
         getCanvas: () => canvasRef.current,
         getSelection: () => selectionRef.current,
-        getBounds: () => selectionRef.current?.getBounds() ?? null,
+        getBounds: () => {
+          const selection = selectionRef.current;
+          if (!selection) return null;
+          return {
+            x: selection.x,
+            y: selection.y,
+            width: selection.width,
+            height: selection.height,
+          };
+        },
         setBounds: (bounds: Partial<CropperBounds>) => {
-          selectionRef.current?.setBounds(bounds);
+          const selection = selectionRef.current;
+          if (!selection) return;
+
+          const x = bounds.x ?? selection.x;
+          const y = bounds.y ?? selection.y;
+          const width = bounds.width ?? selection.width;
+          const height = bounds.height ?? selection.height;
+
+          selection.$change(x, y, width, height);
         },
         reset: () => {
-          selectionRef.current?.reset();
+          selectionRef.current?.$reset();
         },
         clear: () => {
-          selectionRef.current?.clear();
+          selectionRef.current?.$clear();
         },
       }),
       []

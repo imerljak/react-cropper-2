@@ -52,27 +52,37 @@ export interface CropperImageElement extends HTMLImageElement {
 
 /**
  * Cropper selection element properties
+ * Based on CropperJS 2.x actual API
  */
 export interface CropperSelectionElement extends HTMLElement {
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-  aspectRatio?: number;
-  initialAspectRatio?: number;
-  initialCoverage?: number;
-  movable?: boolean;
-  resizable?: boolean;
-  zoomable?: boolean;
-  multiple?: boolean;
-  outlined?: boolean;
+  // Properties (direct access)
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  aspectRatio: number;
+  initialAspectRatio: number;
+  initialCoverage: number;
+  active: boolean;
+  linked: boolean;
+  dynamic: boolean;
+  movable: boolean;
+  resizable: boolean;
+  zoomable: boolean;
+  multiple: boolean;
+  keyboard: boolean;
+  outlined: boolean;
+  precise: boolean;
 
-  // Methods
-  getBounds(): CropperBounds;
-  setBounds(bounds: Partial<CropperBounds>): void;
-  reset(): void;
-  clear(): void;
-  change(event: Event): void;
+  // Methods (prefixed with $)
+  $center(): CropperSelectionElement;
+  $move(x: number, y?: number): CropperSelectionElement;
+  $moveTo(x: number, y?: number): CropperSelectionElement;
+  $resize(action: string, offsetX?: number, offsetY?: number, aspectRatio?: number): CropperSelectionElement;
+  $zoom(scale: number, x?: number, y?: number): CropperSelectionElement;
+  $change(x: number, y: number, width?: number, height?: number, aspectRatio?: number): CropperSelectionElement;
+  $reset(): CropperSelectionElement;
+  $clear(): CropperSelectionElement;
 }
 
 /**
