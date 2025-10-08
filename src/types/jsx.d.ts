@@ -19,6 +19,8 @@ declare module 'react' {
       >;
       'cropper-image': React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement> & {
+          src?: string | undefined;
+          alt?: string | undefined;
           rotatable?: boolean | undefined;
           scalable?: boolean | undefined;
           skewable?: boolean | undefined;

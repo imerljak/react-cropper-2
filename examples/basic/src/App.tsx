@@ -95,12 +95,14 @@ function HookExample(): JSX.Element {
           style={{ maxHeight: '400px', display: 'block' }}
           background
         >
-          <cropper-image rotatable scalable skewable translatable>
-            <img
-              src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800"
-              alt="Nature"
-            />
-          </cropper-image>
+          <cropper-image
+            src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800"
+            alt="Nature"
+            rotatable
+            scalable
+            skewable
+            translatable
+          />
           <cropper-selection
             ref={selectionRef}
             initial-coverage="0.8"
