@@ -1,4 +1,7 @@
 import type { Preview } from '@storybook/react-vite'
+// Import CropperJS to register web components
+// Required in Storybook since stories import components directly from source
+import 'cropperjs';
 
 const preview: Preview = {
   parameters: {
