@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { useCropperAdvanced } from '../hooks/useCropperAdvanced';
 import type { CropperBounds } from '../types';
@@ -159,7 +159,7 @@ export const WithPreview: Story = {
   render: () => {
     const [previewUrl, setPreviewUrl] = useState<string>('');
 
-    const updatePreview = async (canvas: HTMLCanvasElement | null): Promise<void> => {
+    const updatePreview = (canvas: HTMLCanvasElement | null): void => {
       if (!canvas) return;
 
       canvas.toBlob((blob) => {
@@ -174,13 +174,11 @@ export const WithPreview: Story = {
 
     const { canvasRef, selectionRef, getCroppedCanvas } = useCropperAdvanced({
       autoInitialize: true,
-      onReady: async () => {
-        const canvas = await getCroppedCanvas();
-        updatePreview(canvas);
+      onReady: () => {
+        void getCroppedCanvas().then(updatePreview);
       },
-      onChange: async () => {
-        const canvas = await getCroppedCanvas();
-        updatePreview(canvas);
+      onChange: () => {
+        void getCroppedCanvas().then(updatePreview);
       },
     });
 
@@ -280,6 +278,7 @@ export const WithControlButtons: Story = {
           <button
             onClick={() => {
               const bounds = getBounds();
+              // eslint-disable-next-line no-console
               console.log('Current bounds:', bounds);
               alert(JSON.stringify(bounds, null, 2));
             }}
@@ -293,8 +292,20 @@ export const WithControlButtons: Story = {
           >
             Set Bounds
           </button>
-          <button onClick={() => reset()}>Reset</button>
-          <button onClick={() => clear()}>Clear</button>
+          <button
+            onClick={() => {
+              reset();
+            }}
+          >
+            Reset
+          </button>
+          <button
+            onClick={() => {
+              clear();
+            }}
+          >
+            Clear
+          </button>
         </div>
       </div>
     );

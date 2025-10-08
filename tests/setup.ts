@@ -66,8 +66,8 @@ if (typeof window !== 'undefined') {
         return this;
       }
 
-      async $toCanvas(): Promise<HTMLCanvasElement> {
-        return document.createElement('canvas');
+      $toCanvas(): Promise<HTMLCanvasElement> {
+        return Promise.resolve(document.createElement('canvas'));
       }
     }
     customElements.define('cropper-selection', MockCropperSelection);

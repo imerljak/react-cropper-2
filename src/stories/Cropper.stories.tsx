@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useRef, useState } from 'react';
 import { Cropper, type CropperRef } from '../components/Cropper';
 import type { CropperBounds } from '../types';
@@ -124,13 +124,23 @@ export const WithEventHandlers: Story = {
       <div>
         <Cropper
           {...args}
-          onReady={() => console.log('Cropper ready')}
+          onReady={() => {
+            // eslint-disable-next-line no-console
+            console.log('Cropper ready');
+          }}
           onChange={(e) => {
+            // eslint-disable-next-line no-console
             console.log('Crop changed:', e.detail);
             setBounds(e.detail.bounds ?? null);
           }}
-          onCropStart={() => console.log('Crop started')}
-          onCropEnd={() => console.log('Crop ended')}
+          onCropStart={() => {
+            // eslint-disable-next-line no-console
+            console.log('Crop started');
+          }}
+          onCropEnd={() => {
+            // eslint-disable-next-line no-console
+            console.log('Crop ended');
+          }}
         />
         {bounds && (
           <div style={{ marginTop: '1rem', fontSize: '0.875rem' }}>
@@ -174,8 +184,12 @@ export const WithPreview: Story = {
         <Cropper
           {...args}
           ref={cropperRef}
-          onReady={updatePreview}
-          onChange={updatePreview}
+          onReady={() => {
+            void updatePreview();
+          }}
+          onChange={() => {
+            void updatePreview();
+          }}
         />
         {previewUrl && (
           <div style={{ marginTop: '1rem' }}>
@@ -216,6 +230,7 @@ export const WithControlButtons: Story = {
           <button
             onClick={() => {
               const bounds = cropperRef.current?.getBounds();
+              // eslint-disable-next-line no-console
               console.log('Current bounds:', bounds);
               alert(JSON.stringify(bounds, null, 2));
             }}
