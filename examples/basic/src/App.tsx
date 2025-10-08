@@ -93,11 +93,14 @@ function HookExample(): JSX.Element {
         <cropper-canvas
           ref={canvasRef}
           style={{ maxHeight: '400px', display: 'block' }}
+          background
         >
-          <img
-            src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800"
-            alt="Nature"
-          />
+          <cropper-image rotatable scalable skewable translatable>
+            <img
+              src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800"
+              alt="Nature"
+            />
+          </cropper-image>
           <cropper-selection
             ref={selectionRef}
             initial-coverage="0.8"

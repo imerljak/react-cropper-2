@@ -10,15 +10,19 @@ declare module 'react' {
     interface IntrinsicElements {
       'cropper-canvas': React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement> & {
-          src?: string | undefined;
-          alt?: string | undefined;
           background?: boolean | undefined;
+          class?: string | undefined;
+          style?: CSSProperties | undefined;
+          ref?: React.Ref<HTMLElement> | undefined;
+        },
+        HTMLElement
+      >;
+      'cropper-image': React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement> & {
           rotatable?: boolean | undefined;
           scalable?: boolean | undefined;
           skewable?: boolean | undefined;
           translatable?: boolean | undefined;
-          class?: string | undefined;
-          style?: CSSProperties | undefined;
           ref?: React.Ref<HTMLElement> | undefined;
         },
         HTMLElement

@@ -236,12 +236,15 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
         class={className}
         style={style}
         background={background}
-        rotatable={rotatable}
-        scalable={scalable}
-        skewable={skewable}
-        translatable={translatable}
       >
-        <img src={src} alt={alt} />
+        <cropper-image
+          rotatable={rotatable}
+          scalable={scalable}
+          skewable={skewable}
+          translatable={translatable}
+        >
+          <img src={src} alt={alt} />
+        </cropper-image>
         <cropper-selection
           ref={selectionRef}
           initial-coverage={initialCoverage}
