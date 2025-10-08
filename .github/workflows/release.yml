@@ -59,13 +59,13 @@ jobs:
             ## Installation
 
             ```bash
-            npm install react-cropper-2@${{ steps.version.outputs.VERSION }}
+            npm install @imerljak/react-cropper-2@${{ steps.version.outputs.VERSION }}
             ```
           draft: false
           prerelease: false
           files: dist/*
 
       - name: Publish to npm
-        run: npm publish
+        run: npm publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

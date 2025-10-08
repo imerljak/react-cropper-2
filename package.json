@@ -1,12 +1,12 @@
 {
-  "name": "react-cropper-2",
+  "name": "@imerljak/react-cropper-2",
   "version": "0.1.0",
   "description": "A modern React wrapper for CropperJS 2.x web components",
   "author": "react-cropper-2 contributors",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/react-cropper-2/react-cropper-2.git"
+    "url": "https://github.com/imerljak/react-cropper-2.git"
   },
   "keywords": [
     "react",

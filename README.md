@@ -2,7 +2,7 @@
 
 > A modern React wrapper for CropperJS 2.x
 
-[![npm version](https://img.shields.io/npm/v/react-cropper-2.svg)](https://www.npmjs.com/package/react-cropper-2)
+[![npm version](https://img.shields.io/npm/v/@imerljak/react-cropper-2.svg)](https://www.npmjs.com/package/@imerljak/react-cropper-2)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🚧 Work in Progress
@@ -29,15 +29,13 @@ This library is currently under active development. CropperJS 2.x introduced a c
 ## Installation
 
 ```bash
-# Coming soon
-npm install react-cropper-2 cropperjs@next
+npm install @imerljak/react-cropper-2 cropperjs@2
 ```
 
 ## Quick Start
 
 ```tsx
-// Coming soon
-import { Cropper } from 'react-cropper-2';
+import { Cropper } from '@imerljak/react-cropper-2';
 
 function App() {
   return (
