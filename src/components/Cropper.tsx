@@ -1,16 +1,6 @@
-import {
-  forwardRef,
-  useEffect,
-  useRef,
-  useImperativeHandle,
-  type CSSProperties,
-} from 'react';
-import type {
-  CropperCanvasElement,
-  CropperSelectionElement,
-  CropperEventHandler,
-  CropperBounds,
-} from '../types';
+import { forwardRef, useImperativeHandle, type CSSProperties } from 'react';
+import { useCropperAdvanced } from '../hooks/useCropperAdvanced';
+import type { CropperCanvasElement, CropperEventHandler, CropperBounds } from '../types';
 
 /**
  * Props for the Cropper component
@@ -82,8 +72,6 @@ export interface GetCroppedCanvasOptions {
 export interface CropperRef {
   /** Get the canvas element */
   getCanvas: () => CropperCanvasElement | null;
-  /** Get the selection element */
-  getSelection: () => CropperSelectionElement | null;
   /** Get current crop bounds */
   getBounds: () => CropperBounds | null;
   /** Set crop bounds */
@@ -141,116 +129,38 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
     },
     ref
   ) => {
-    const canvasRef = useRef<CropperCanvasElement>(null);
-    const selectionRef = useRef<CropperSelectionElement>(null);
-
-    // Store callbacks in refs to prevent stale closures
-    const onReadyRef = useRef(onReady);
-    const onChangeRef = useRef(onChange);
-    const onCropStartRef = useRef(onCropStart);
-    const onCropMoveRef = useRef(onCropMove);
-    const onCropEndRef = useRef(onCropEnd);
-
-    // Update callback refs when they change
-    useEffect(() => {
-      onReadyRef.current = onReady;
-      onChangeRef.current = onChange;
-      onCropStartRef.current = onCropStart;
-      onCropMoveRef.current = onCropMove;
-      onCropEndRef.current = onCropEnd;
+    // Use the advanced hook for all functionality
+    const {
+      canvasRef,
+      selectionRef,
+      getCanvas,
+      getBounds,
+      setBounds,
+      reset,
+      clear,
+      getCroppedCanvas,
+    } = useCropperAdvanced({
+      ...(onReady && { onReady }),
+      ...(onChange && { onChange }),
+      ...(onCropStart && { onCropStart }),
+      ...(onCropMove && { onCropMove }),
+      ...(onCropEnd && { onCropEnd }),
+      autoInitialize: true,
     });
 
     // Expose methods via ref
     useImperativeHandle(
       ref,
       () => ({
-        getCanvas: () => canvasRef.current,
-        getSelection: () => selectionRef.current,
-        getBounds: () => {
-          const selection = selectionRef.current;
-          if (!selection) return null;
-          return {
-            x: selection.x,
-            y: selection.y,
-            width: selection.width,
-            height: selection.height,
-          };
-        },
-        setBounds: (bounds: Partial<CropperBounds>) => {
-          const selection = selectionRef.current;
-          if (!selection) return;
-
-          const x = bounds.x ?? selection.x;
-          const y = bounds.y ?? selection.y;
-          const width = bounds.width ?? selection.width;
-          const height = bounds.height ?? selection.height;
-
-          selection.$change(x, y, width, height);
-        },
-        reset: () => {
-          selectionRef.current?.$reset();
-        },
-        clear: () => {
-          selectionRef.current?.$clear();
-        },
-        getCroppedCanvas: async (options?: GetCroppedCanvasOptions) => {
-          const selection = selectionRef.current;
-          if (!selection) return null;
-          return selection.$toCanvas(options);
-        },
+        getCanvas,
+        getBounds,
+        setBounds,
+        reset,
+        clear,
+        getCroppedCanvas,
       }),
-      []
+      [getCanvas, getBounds, setBounds, reset, clear, getCroppedCanvas]
     );
-
-    // Setup event listeners
-    useEffect(() => {
-      const canvas = canvasRef.current;
-      const selection = selectionRef.current;
-
-      if (!canvas || !selection) return;
-
-      // Call onReady when component is mounted
-      if (onReadyRef.current) {
-        onReadyRef.current(canvas);
-      }
-
-      // Event listener helpers
-      const handlers: Array<{
-        element: HTMLElement;
-        event: string;
-        handler: EventListener;
-      }> = [];
-
-      const addEventListener = (
-        element: HTMLElement,
-        event: string,
-        handler: EventListener
-      ): void => {
-        element.addEventListener(event, handler);
-        handlers.push({ element, event, handler });
-      };
-
-      // Attach event listeners
-      if (onChangeRef.current) {
-        addEventListener(selection, 'change', onChangeRef.current as EventListener);
-      }
-      if (onCropStartRef.current) {
-        addEventListener(selection, 'cropstart', onCropStartRef.current as EventListener);
-      }
-      if (onCropMoveRef.current) {
-        addEventListener(selection, 'cropmove', onCropMoveRef.current as EventListener);
-      }
-      if (onCropEndRef.current) {
-        addEventListener(selection, 'cropend', onCropEndRef.current as EventListener);
-      }
-
-      // Cleanup
-      return () => {
-        handlers.forEach(({ element, event, handler }) => {
-          element.removeEventListener(event, handler);
-        });
-      };
-    }, []); // Empty deps - refs are stable and handlers are attached once
 
     return (
       <cropper-canvas

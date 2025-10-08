@@ -172,14 +172,6 @@ describe('Cropper Component', () => {
       expect(typeof ref.current.getCanvas).toBe('function');
     });
 
-    it('should expose getSelection method via ref', () => {
-      const ref = { current: null } as unknown as React.RefObject<CropperRef>;
-      render(<Cropper ref={ref} src="/test-image.jpg" />);
-
-      expect(ref.current.getSelection).toBeDefined();
-      expect(typeof ref.current.getSelection).toBe('function');
-    });
-
     it('should expose getBounds method via ref', () => {
       const ref = { current: null } as unknown as React.RefObject<CropperRef>;
       render(<Cropper ref={ref} src="/test-image.jpg" />);
