@@ -47,6 +47,28 @@ declare module 'react' {
         },
         HTMLElement
       >;
+      'cropper-grid': React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement> & {
+          role?: string | undefined;
+          bordered?: boolean | undefined;
+          covered?: boolean | undefined;
+        },
+        HTMLElement
+      >;
+      'cropper-crosshair': React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement> & {
+          centered?: boolean | undefined;
+        },
+        HTMLElement
+      >;
+      'cropper-handle': React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement> & {
+          action?: string | undefined;
+          'theme-color'?: string | undefined;
+          plain?: boolean | undefined;
+        },
+        HTMLElement
+      >;
     }
   }
 }

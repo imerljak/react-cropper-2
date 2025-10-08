@@ -108,7 +108,19 @@ function HookExample(): JSX.Element {
             initial-coverage="0.8"
             aspect-ratio={1}
             outlined
-          />
+          >
+            <cropper-grid role="grid" bordered covered />
+            <cropper-crosshair centered />
+            <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)" />
+            <cropper-handle action="n-resize" />
+            <cropper-handle action="e-resize" />
+            <cropper-handle action="s-resize" />
+            <cropper-handle action="w-resize" />
+            <cropper-handle action="ne-resize" />
+            <cropper-handle action="nw-resize" />
+            <cropper-handle action="se-resize" />
+            <cropper-handle action="sw-resize" />
+          </cropper-selection>
         </cropper-canvas>
       </div>
 
