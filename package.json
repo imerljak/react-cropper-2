@@ -1,6 +1,6 @@
 {
   "name": "@imerljak/react-cropper-2",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A modern React wrapper for CropperJS 2.x web components",
   "author": "react-cropper-2 contributors",
   "license": "MIT",
