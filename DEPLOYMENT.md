@@ -2,300 +2,242 @@
 
 ## Overview
 
-This guide covers deploying react-cropper-2 to production, including CI/CD setup, release process, and monitoring.
+This guide covers the deployment and release process for `@imerljak/react-cropper-2`.
 
 ## Prerequisites
 
-### GitHub Repository Setup
+### NPM Account Setup
 
-1. **Create GitHub Repository**
+1. **Create NPM Account**
+   - Go to [npmjs.com](https://npmjs.com) and create an account
+   - Enable 2FA (two-factor authentication) for security
+
+2. **Generate Access Token**
    ```bash
-   gh repo create react-cropper-2 --public --source=. --remote=origin
-   git push -u origin main
+   # Log in to npm
+   npm login
+
+   # Or generate a token at: https://www.npmjs.com/settings/YOUR_USERNAME/tokens
+   # Token type: "Automation"
    ```
 
-2. **Configure Branch Protection**
-   - Go to Settings → Branches → Add rule
-   - Branch name pattern: `main`
-   - Enable:
-     - ✅ Require pull request reviews (1 reviewer)
-     - ✅ Require status checks: Test (18.x), Test (20.x), Build
-     - ✅ Require branches to be up to date
-     - ✅ Require linear history
+3. **Add Token to GitHub Secrets**
+   - Go to GitHub repository → Settings → Secrets and variables → Actions
+   - Create new secret: `NPM_TOKEN`
+   - Paste your npm token
 
-### Required Secrets
+## Release Process
 
-Configure in GitHub Settings → Secrets → Actions:
+### Automated Release (Recommended)
 
-#### 1. NPM_TOKEN (Required for releases)
+The project uses GitHub Actions for automated releases:
+
+1. **Create a New Version Tag**
+   ```bash
+   # For a patch release (0.1.0 → 0.1.1)
+   npm version patch
+
+   # For a minor release (0.1.0 → 0.2.0)
+   npm version minor
+
+   # For a major release (0.1.0 → 1.0.0)
+   npm version major
+   ```
+
+2. **Push the Tag**
+   ```bash
+   git push --follow-tags
+   ```
+
+3. **Automatic Deployment**
+
+   The GitHub Actions workflow (`.github/workflows/release.yml`) will automatically:
+   - Run all tests
+   - Build the library
+   - Create a GitHub Release with changelog
+   - Publish to npm registry
+
+4. **Verify the Release**
+   ```bash
+   # Check npm
+   npm view @imerljak/react-cropper-2
+
+   # Test installation
+   npm install @imerljak/react-cropper-2@latest
+   ```
+
+### Manual Release (If Needed)
+
+If you need to publish manually:
 
 ```bash
-# 1. Log in to npmjs.com
-# 2. Go to Account Settings → Access Tokens
-# 3. Generate New Token → Automation
-# 4. Copy token
-# 5. Add to GitHub Secrets as NPM_TOKEN
+# Build the library
+npm run build
+
+# Publish to npm (with public access for scoped packages)
+npm publish --access=public
 ```
 
-#### 2. CODECOV_TOKEN (Optional, recommended)
+## Versioning Strategy
 
-```bash
-# 1. Go to codecov.io
-# 2. Sign in with GitHub
-# 3. Add repository
-# 4. Copy token
-# 5. Add to GitHub Secrets as CODECOV_TOKEN
-```
+Follow [Semantic Versioning](https://semver.org/):
+
+- **MAJOR** (1.0.0): Breaking changes
+  - API changes that break backward compatibility
+  - Major dependency updates
+
+- **MINOR** (0.1.0): New features
+  - New functionality (backward compatible)
+  - New component props or hook options
+
+- **PATCH** (0.0.1): Bug fixes
+  - Bug fixes
+  - Performance improvements
+  - Documentation updates
 
 ## CI/CD Pipeline
 
-### Automatic Workflows
+### Continuous Integration (`.github/workflows/ci.yml`)
 
-#### On Every Push to main/develop
+Runs on every push to `main` and on pull requests:
 - ✅ Linting (ESLint)
 - ✅ Type checking (TypeScript)
-- ✅ Tests on Node 18.x and 20.x
-- ✅ Coverage reporting
+- ✅ Tests with coverage (Vitest)
 - ✅ Build verification
-- ✅ Example app validation
 
-#### On Every Pull Request
-- ✅ All CI checks above
-- ✅ Conventional commit validation
-- ✅ Bundle size reporting
-- ✅ Coverage comparison
-- ✅ PR statistics
+### Pull Request Checks (`.github/workflows/pr-check.yml`)
 
-#### On Version Tags
+Additional checks for pull requests:
+- ✅ All CI checks
+- ✅ Test coverage threshold (85%+)
+
+### Release Workflow (`.github/workflows/release.yml`)
+
+Triggered by version tags (`v*.*.*`):
 - ✅ Full test suite
 - ✅ Production build
 - ✅ GitHub Release creation
 - ✅ NPM package publishing
 
-## Release Process
+### Storybook Deployment (`.github/workflows/deploy-storybook.yml`)
 
-### Semantic Versioning
+Automatically deploys Storybook to GitHub Pages on push to `main`:
+- 📚 Interactive documentation
+- 🎨 Live component examples
+- 🔗 Available at: https://imerljak.github.io/react-cropper-2/
 
-Follow [Semantic Versioning](https://semver.org/):
-- **MAJOR** (1.0.0): Breaking changes
-- **MINOR** (0.1.0): New features, backward compatible
-- **PATCH** (0.0.1): Bug fixes, backward compatible
+## GitHub Pages Setup
 
-### Creating a Release
+To enable Storybook deployment to GitHub Pages:
 
-#### 1. Update Version
+1. Go to repository **Settings** → **Pages**
+2. Under "Build and deployment":
+   - **Source**: Select "GitHub Actions"
+3. The Storybook will be available at `https://imerljak.github.io/react-cropper-2/`
 
-```bash
-# For a patch release (0.1.0 → 0.1.1)
-npm version patch
+See `.github/STORYBOOK_DEPLOYMENT.md` for detailed instructions.
 
-# For a minor release (0.1.1 → 0.2.0)
-npm version minor
+## Pre-Release Checklist
 
-# For a major release (0.2.0 → 1.0.0)
-npm version major
-```
+Before creating a release, ensure:
 
-This automatically:
-- Updates `package.json`
-- Creates a git commit
-- Creates a git tag
-
-#### 2. Push with Tags
-
-```bash
-git push --follow-tags
-```
-
-#### 3. Automatic Release
-
-The CI/CD pipeline automatically:
-1. Runs full test suite
-2. Builds the library
-3. Generates changelog from commits
-4. Creates GitHub Release
-5. Publishes to npm
-
-#### 4. Verify Release
-
-```bash
-# Check GitHub Releases
-https://github.com/your-org/react-cropper-2/releases
-
-# Check npm
-npm view react-cropper-2
-
-# Test installation
-npm install react-cropper-2@latest
-```
-
-### Manual Release (If Needed)
-
-```bash
-# Build
-npm run build
-
-# Publish to npm
-npm publish
-
-# Create GitHub Release manually
-gh release create v0.1.0 \
-  --title "Release 0.1.0" \
-  --notes "Release notes here"
-```
+- [ ] All tests pass locally (`npm test`)
+- [ ] Build succeeds (`npm run build`)
+- [ ] No linting errors (`npm run lint`)
+- [ ] No TypeScript errors (`npm run typecheck`)
+- [ ] Documentation is up to date
+- [ ] Example app works (`npm run dev`)
+- [ ] Storybook builds (`npm run build-storybook`)
+- [ ] Version number is updated in `package.json`
+- [ ] Breaking changes are documented (if any)
 
 ## Monitoring
 
+### NPM Package
+
+View package statistics:
+```bash
+# Package information
+npm view @imerljak/react-cropper-2
+
+# Install the package to test
+npm install @imerljak/react-cropper-2
+```
+
 ### GitHub Actions
 
-View all workflow runs:
-```
-https://github.com/your-org/react-cropper-2/actions
-```
+Monitor all workflow runs:
+- Go to **Actions** tab in the repository
+- Check for failed builds or deployments
+- Review workflow logs for errors
 
-### NPM Statistics
+### Storybook
 
-```bash
-# Downloads
-npm-stat react-cropper-2
-
-# Package info
-npm view react-cropper-2
-```
-
-### Codecov
-
-View coverage reports:
-```
-https://codecov.io/gh/your-org/react-cropper-2
-```
-
-## GitHub Codespaces
-
-### Opening in Codespaces
-
-1. Go to repository on GitHub
-2. Click "Code" → "Codespaces" → "Create codespace on main"
-3. Wait for container to build (~2-3 minutes first time)
-4. Start developing!
-
-### Codespaces Features
-
-- ✅ Node.js 20 pre-installed
-- ✅ Dependencies auto-installed
-- ✅ Library auto-built
-- ✅ VS Code extensions configured
-- ✅ Port forwarding for dev server
-- ✅ Format-on-save enabled
-- ✅ ESLint auto-fix enabled
-
-### Running in Codespaces
-
-```bash
-# Start dev server
-npm run dev
-
-# Run tests
-npm test
-
-# Build
-npm run build
-```
+- Live documentation: https://imerljak.github.io/react-cropper-2/
+- Check deployment status in GitHub Actions
 
 ## Troubleshooting
 
-### Release Failed
+### Release Failed - NPM Publish Error
 
-**Issue:** Release workflow failed during npm publish
+**Issue**: `npm publish` fails in GitHub Actions
 
-**Solution:**
-1. Check `NPM_TOKEN` is valid
-2. Verify you have publish permissions
-3. Ensure package name is available
+**Solutions**:
+1. Verify `NPM_TOKEN` secret is set correctly
+2. Check you have publish permissions for the package
+3. Ensure the version number hasn't been published already
 4. Check npm registry status
 
-### CI Tests Failing
+### Storybook Build Failed
 
-**Issue:** Tests pass locally but fail in CI
+**Issue**: Storybook build fails in CI
 
-**Solution:**
-1. Check Node.js version matches CI (18.x or 20.x)
-2. Run `npm ci` instead of `npm install`
-3. Check for environment-specific issues
-4. Review CI logs for detailed errors
+**Solutions**:
+1. Test locally: `npm run build-storybook`
+2. Check for missing dependencies
+3. Review build logs in GitHub Actions
+4. Verify Node version matches CI (20.x)
 
-### Coverage Not Uploading
+### Tests Failing in CI
 
-**Issue:** Coverage reports not appearing on Codecov
+**Issue**: Tests pass locally but fail in CI
 
-**Solution:**
-1. Verify `CODECOV_TOKEN` is set
-2. Check repository is linked to Codecov
-3. Ensure coverage files are generated
-4. Review workflow logs
+**Solutions**:
+1. Use `npm ci` instead of `npm install` locally
+2. Check Node.js version (should be 20.x)
+3. Clear npm cache: `npm cache clean --force`
+4. Review CI logs for specific errors
 
-### Conventional Commits Failing
+### GitHub Pages Not Updating
 
-**Issue:** PR check fails on commit validation
+**Issue**: Storybook documentation not updating
 
-**Solution:**
-1. Use proper format: `type(scope): subject`
-2. Valid types: feat, fix, docs, style, refactor, perf, test, chore
-3. Example: `feat: add new crop mode`
-4. Amend commits if needed:
-   ```bash
-   git commit --amend -m "feat: correct commit message"
-   git push --force-with-lease
-   ```
+**Solutions**:
+1. Check GitHub Pages is enabled in repository settings
+2. Verify source is set to "GitHub Actions"
+3. Check the deploy workflow completed successfully
+4. Wait a few minutes - GitHub Pages can take time to propagate
+5. Clear browser cache and try again
 
-## Best Practices
+## Security Best Practices
 
-### Before Releasing
-
-✅ **Checklist:**
-- [ ] All tests pass locally
-- [ ] Documentation updated
-- [ ] CHANGELOG.md updated
-- [ ] Version bumped appropriately
-- [ ] Breaking changes documented
-- [ ] Examples tested
-
-### Security
-
-- 🔒 Never commit secrets
-- 🔒 Use GitHub Secrets for tokens
-- 🔒 Enable Dependabot security updates
-- 🔒 Review dependencies regularly
+- 🔒 Never commit sensitive tokens or secrets
+- 🔒 Use GitHub Secrets for all tokens
 - 🔒 Enable 2FA on npm account
-
-### Performance
-
-- ⚡ Keep bundle size <10KB
-- ⚡ Monitor bundle size in CI
-- ⚡ Use tree-shaking
-- ⚡ Minimize dependencies
+- 🔒 Regularly update dependencies
+- 🔒 Review Dependabot security alerts
 
 ## Support
 
-### Getting Help
-
-- 📖 Documentation: See README.md
-- 🐛 Issues: GitHub Issues
-- 💬 Discussions: GitHub Discussions
-- 📧 Email: maintainers@react-cropper-2.org
-
-### Contributing
-
-See CONTRIBUTING.md for guidelines on:
-- Code style
-- Commit conventions
-- PR process
-- Testing requirements
+For deployment issues:
+- Check GitHub Actions logs
+- Review this guide
+- Open an issue on GitHub
+- Check npm registry status
 
 ## Resources
 
+- [NPM Documentation](https://docs.npmjs.com/)
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [npm Publishing Guide](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry)
 - [Semantic Versioning](https://semver.org/)
-- [Conventional Commits](https://www.conventionalcommits.org/)
-- [Codecov Documentation](https://docs.codecov.com/)
+- [GitHub Pages Documentation](https://docs.github.com/en/pages)
