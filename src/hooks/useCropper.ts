@@ -29,9 +29,9 @@ export interface UseCropperOptions {
  */
 export interface UseCropperReturn {
   /** Ref to attach to cropper-canvas element */
-  canvasRef: React.RefObject<CropperCanvasElement>;
+  canvasRef: React.RefObject<CropperCanvasElement | null>;
   /** Ref to attach to cropper-selection element */
-  selectionRef: React.RefObject<CropperSelectionElement>;
+  selectionRef: React.RefObject<CropperSelectionElement | null>;
   /** Current crop bounds */
   bounds: CropperBounds | null;
   /** Whether the cropper is ready */

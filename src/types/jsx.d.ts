@@ -5,7 +5,7 @@
 
 import type { CSSProperties } from 'react';
 
-declare global {
+declare module 'react' {
   namespace JSX {
     interface IntrinsicElements {
       'cropper-canvas': React.DetailedHTMLProps<
@@ -44,5 +44,3 @@ declare global {
     }
   }
 }
-
-export {};

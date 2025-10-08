@@ -65,21 +65,24 @@ describe('Cropper Component', () => {
       render(<Cropper src="/test-image.jpg" rotatable={false} />);
 
       const canvas = document.querySelector('cropper-canvas');
-      expect(canvas).toHaveAttribute('rotatable', 'false');
+      // In React 19, false boolean attributes are not rendered
+      expect(canvas).not.toHaveAttribute('rotatable');
     });
 
     it('should configure selection with movable property', () => {
       render(<Cropper src="/test-image.jpg" movable={false} />);
 
       const selection = document.querySelector('cropper-selection');
-      expect(selection).toHaveAttribute('movable', 'false');
+      // In React 19, false boolean attributes are not rendered
+      expect(selection).not.toHaveAttribute('movable');
     });
 
     it('should configure selection with resizable property', () => {
       render(<Cropper src="/test-image.jpg" resizable={false} />);
 
       const selection = document.querySelector('cropper-selection');
-      expect(selection).toHaveAttribute('resizable', 'false');
+      // In React 19, false boolean attributes are not rendered
+      expect(selection).not.toHaveAttribute('resizable');
     });
   });
 
@@ -164,48 +167,48 @@ describe('Cropper Component', () => {
       const ref = { current: null } as React.RefObject<CropperRef>;
       render(<Cropper ref={ref} src="/test-image.jpg" />);
 
-      expect(ref.current?.getCanvas).toBeDefined();
-      expect(typeof ref.current?.getCanvas).toBe('function');
+      expect(ref.current.getCanvas).toBeDefined();
+      expect(typeof ref.current.getCanvas).toBe('function');
     });
 
     it('should expose getSelection method via ref', () => {
       const ref = { current: null } as React.RefObject<CropperRef>;
       render(<Cropper ref={ref} src="/test-image.jpg" />);
 
-      expect(ref.current?.getSelection).toBeDefined();
-      expect(typeof ref.current?.getSelection).toBe('function');
+      expect(ref.current.getSelection).toBeDefined();
+      expect(typeof ref.current.getSelection).toBe('function');
     });
 
     it('should expose getBounds method via ref', () => {
       const ref = { current: null } as React.RefObject<CropperRef>;
       render(<Cropper ref={ref} src="/test-image.jpg" />);
 
-      expect(ref.current?.getBounds).toBeDefined();
-      expect(typeof ref.current?.getBounds).toBe('function');
+      expect(ref.current.getBounds).toBeDefined();
+      expect(typeof ref.current.getBounds).toBe('function');
     });
 
     it('should expose setBounds method via ref', () => {
       const ref = { current: null } as React.RefObject<CropperRef>;
       render(<Cropper ref={ref} src="/test-image.jpg" />);
 
-      expect(ref.current?.setBounds).toBeDefined();
-      expect(typeof ref.current?.setBounds).toBe('function');
+      expect(ref.current.setBounds).toBeDefined();
+      expect(typeof ref.current.setBounds).toBe('function');
     });
 
     it('should expose reset method via ref', () => {
       const ref = { current: null } as React.RefObject<CropperRef>;
       render(<Cropper ref={ref} src="/test-image.jpg" />);
 
-      expect(ref.current?.reset).toBeDefined();
-      expect(typeof ref.current?.reset).toBe('function');
+      expect(ref.current.reset).toBeDefined();
+      expect(typeof ref.current.reset).toBe('function');
     });
 
     it('should expose clear method via ref', () => {
       const ref = { current: null } as React.RefObject<CropperRef>;
       render(<Cropper ref={ref} src="/test-image.jpg" />);
 
-      expect(ref.current?.clear).toBeDefined();
-      expect(typeof ref.current?.clear).toBe('function');
+      expect(ref.current.clear).toBeDefined();
+      expect(typeof ref.current.clear).toBe('function');
     });
   });
 

@@ -31,7 +31,7 @@ module.exports = {
   plugins: ['react', 'react-hooks', 'react-refresh', '@typescript-eslint'],
   settings: {
     react: {
-      version: '18.3',
+      version: 'detect',
     },
   },
   rules: {
