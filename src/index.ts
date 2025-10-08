@@ -3,6 +3,9 @@
  * A modern React wrapper for CropperJS 2.x web components
  */
 
+// Import CropperJS to register web components globally
+import 'cropperjs';
+
 // Main component
 export { Cropper } from './components/Cropper';
 export type { CropperProps, CropperRef } from './components/Cropper';

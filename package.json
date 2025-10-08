@@ -38,7 +38,10 @@
     "README.md",
     "LICENSE"
   ],
-  "sideEffects": false,
+  "sideEffects": [
+    "dist/index.js",
+    "dist/index.cjs"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
