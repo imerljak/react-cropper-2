@@ -20,6 +20,8 @@ export interface CropperProps {
   src: string;
   /** Alt text for the image */
   alt?: string;
+  /** CORS setting for the image */
+  crossOrigin?: 'anonymous' | 'use-credentials' | '';
   /** Aspect ratio for the crop selection (e.g., 16/9, 1, 4/3) */
   aspectRatio?: number;
   /** Initial aspect ratio */
@@ -63,6 +65,18 @@ export interface CropperProps {
 }
 
 /**
+ * Options for getting the cropped canvas
+ */
+export interface GetCroppedCanvasOptions {
+  /** Width of the output canvas */
+  width?: number;
+  /** Height of the output canvas */
+  height?: number;
+  /** Callback before drawing the image onto the canvas */
+  beforeDraw?: (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => void;
+}
+
+/**
  * Methods exposed via ref
  */
 export interface CropperRef {
@@ -78,6 +92,8 @@ export interface CropperRef {
   reset: () => void;
   /** Clear the selection */
   clear: () => void;
+  /** Get the cropped area as a canvas element */
+  getCroppedCanvas: (options?: GetCroppedCanvasOptions) => Promise<HTMLCanvasElement | null>;
 }
 
 /**
@@ -101,6 +117,7 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
     {
       src,
       alt = '',
+      crossOrigin,
       aspectRatio,
       initialAspectRatio,
       initialCoverage = 0.8,
@@ -176,6 +193,11 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
         clear: () => {
           selectionRef.current?.$clear();
         },
+        getCroppedCanvas: async (options?: GetCroppedCanvasOptions) => {
+          const selection = selectionRef.current;
+          if (!selection) return null;
+          return selection.$toCanvas(options);
+        },
       }),
       []
     );
@@ -240,6 +262,7 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
         <cropper-image
           src={src}
           alt={alt}
+          crossorigin={crossOrigin}
           rotatable={rotatable}
           scalable={scalable}
           skewable={skewable}

@@ -83,6 +83,11 @@ export interface CropperSelectionElement extends HTMLElement {
   $change(x: number, y: number, width?: number, height?: number, aspectRatio?: number): CropperSelectionElement;
   $reset(): CropperSelectionElement;
   $clear(): CropperSelectionElement;
+  $toCanvas(options?: {
+    width?: number;
+    height?: number;
+    beforeDraw?: (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => void;
+  }): Promise<HTMLCanvasElement>;
 }
 
 /**

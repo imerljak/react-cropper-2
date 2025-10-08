@@ -21,6 +21,7 @@ declare module 'react' {
         React.HTMLAttributes<HTMLElement> & {
           src?: string | undefined;
           alt?: string | undefined;
+          crossorigin?: 'anonymous' | 'use-credentials' | '' | undefined;
           rotatable?: boolean | undefined;
           scalable?: boolean | undefined;
           skewable?: boolean | undefined;

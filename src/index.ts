@@ -7,9 +7,11 @@
 export { Cropper } from './components/Cropper';
 export type { CropperProps, CropperRef } from './components/Cropper';
 
-// Hook
-export { useCropper } from './hooks/useCropper';
-export type { UseCropperOptions, UseCropperReturn } from './hooks/useCropper';
+// Hooks
+export { useCropper } from './hooks/useCropper.tsx';
+export type { UseCropperOptions, UseCropperReturn } from './hooks/useCropper.tsx';
+export { useCropperAdvanced } from './hooks/useCropperAdvanced';
+export type { UseCropperAdvancedOptions, UseCropperAdvancedReturn } from './hooks/useCropperAdvanced';
 
 // Types
 export type {

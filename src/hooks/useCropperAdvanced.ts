@@ -7,9 +7,9 @@ import type {
 } from '../types';
 
 /**
- * Configuration options for useCropper hook
+ * Configuration options for useCropperAdvanced hook
  */
-export interface UseCropperOptions {
+export interface UseCropperAdvancedOptions {
   /** Callback when cropper is ready */
   onReady?: (canvas: CropperCanvasElement) => void;
   /** Callback when crop area changes */
@@ -25,9 +25,21 @@ export interface UseCropperOptions {
 }
 
 /**
- * Return type for useCropper hook
+ * Options for getting the cropped canvas
  */
-export interface UseCropperReturn {
+export interface GetCroppedCanvasOptions {
+  /** Width of the output canvas */
+  width?: number;
+  /** Height of the output canvas */
+  height?: number;
+  /** Callback before drawing the image onto the canvas */
+  beforeDraw?: (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => void;
+}
+
+/**
+ * Return type for useCropperAdvanced hook
+ */
+export interface UseCropperAdvancedReturn {
   /** Ref to attach to cropper-canvas element */
   canvasRef: React.RefObject<CropperCanvasElement | null>;
   /** Ref to attach to cropper-selection element */
@@ -48,32 +60,25 @@ export interface UseCropperReturn {
   getCanvas: () => CropperCanvasElement | null;
   /** Get selection element */
   getSelection: () => CropperSelectionElement | null;
+  /** Get the cropped area as a canvas element */
+  getCroppedCanvas: (options?: GetCroppedCanvasOptions) => Promise<HTMLCanvasElement | null>;
 }
 
 /**
- * React hook for managing CropperJS 2.x web components
+ * Advanced React hook for managing CropperJS 2.x web components
  *
- * Provides a composable API for cropper functionality with automatic
- * event handling, state management, and cleanup.
+ * Provides low-level access to cropper functionality for advanced use cases.
+ * For most cases, use the simpler `useCropper` hook instead.
  *
  * @example
- * ```tsx
- * function MyComponent() {
- *   const { canvasRef, selectionRef, bounds, setBounds, reset } = useCropper({
- *     onReady: (canvas) => console.log('Ready!'),
- *     onChange: (e) => console.log('Changed:', e.detail.bounds),
- *   });
+ * const { canvasRef, selectionRef, bounds, setBounds, reset } = useCropperAdvanced({
+ *   onReady: (canvas) => console.log('Ready!'),
+ *   onChange: (e) => console.log('Changed:', e.detail.bounds),
+ * });
  *
- *   return (
- *     <cropper-canvas ref={canvasRef}>
- *       <img src="/image.jpg" />
- *       <cropper-selection ref={selectionRef} />
- *     </cropper-canvas>
- *   );
- * }
- * ```
+ * // Then manually render cropper elements with refs attached
  */
-export function useCropper(options: UseCropperOptions = {}): UseCropperReturn {
+export function useCropperAdvanced(options: UseCropperAdvancedOptions = {}): UseCropperAdvancedReturn {
   const {
     onReady,
     onChange,
@@ -181,6 +186,16 @@ export function useCropper(options: UseCropperOptions = {}): UseCropperReturn {
     []
   );
 
+  // Get cropped canvas
+  const getCroppedCanvas = useCallback(
+    async (options?: GetCroppedCanvasOptions): Promise<HTMLCanvasElement | null> => {
+      const selection = selectionRef.current;
+      if (!selection) return null;
+      return selection.$toCanvas(options);
+    },
+    []
+  );
+
   // Track if refs are ready
   const [refsReady, setRefsReady] = useState(false);
 
@@ -277,5 +292,6 @@ export function useCropper(options: UseCropperOptions = {}): UseCropperReturn {
     clear,
     getCanvas,
     getSelection,
+    getCroppedCanvas,
   };
 }
