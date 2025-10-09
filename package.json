@@ -49,6 +49,7 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
+    "test:storybook": "vitest --project=storybook",
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,json,md}\"",
@@ -66,6 +67,7 @@
   "devDependencies": {
     "@storybook/addon-docs": "^9.1.10",
     "@storybook/addon-onboarding": "^9.1.10",
+    "@storybook/addon-vitest": "^9.1.10",
     "@storybook/react-vite": "^9.1.10",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.0.1",
@@ -92,7 +94,9 @@
     "typescript": "^5.6.3",
     "vite": "^7.1.9",
     "vite-plugin-dts": "^4.2.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "@vitest/browser": "3.2.4",
+    "playwright": "^1.56.0"
   },
   "engines": {
     "node": ">=20.0.0"

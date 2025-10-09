@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, userEvent, within } from 'storybook/test';
 import { useRef, useState } from 'react';
 import { Cropper, type CropperRef } from '../components/Cropper';
 import type { CropperBounds } from '../types';
@@ -65,7 +66,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const sampleImage = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4';
+const sampleImage =
+  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4';
 
 export const Default: Story = {
   args: {
@@ -73,6 +75,22 @@ export const Default: Story = {
     alt: 'Sample landscape image',
     crossOrigin: 'anonymous',
     style: { maxHeight: '500px', width: '100%' },
+  },
+  play: async ({ canvasElement }) => {
+    // Wait for the cropper to initialize
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Verify cropper web components are rendered
+    const cropperCanvas = canvasElement.querySelector('cropper-canvas');
+    const cropperImage = canvasElement.querySelector('cropper-image');
+    const cropperSelection = canvasElement.querySelector('cropper-selection');
+
+    await expect(cropperCanvas).toBeInTheDocument();
+    await expect(cropperImage).toBeInTheDocument();
+    await expect(cropperSelection).toBeInTheDocument();
+
+    // Verify the image has the correct alt text
+    await expect(cropperImage).toHaveAttribute('alt', 'Sample landscape image');
   },
 };
 
@@ -217,6 +235,21 @@ export const WithPreview: Story = {
     aspectRatio: 16 / 9,
     style: { maxHeight: '500px', width: '100%' },
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Wait for the cropper to initialize and preview to render
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // Verify Preview heading is present
+    const previewHeading = canvas.getByText('Preview:');
+    await expect(previewHeading).toBeInTheDocument();
+
+    // Verify the preview image is rendered
+    const previewImage = canvas.getByAltText('Cropped preview');
+    await expect(previewImage).toBeInTheDocument();
+    await expect(previewImage).toHaveAttribute('src');
+  },
 };
 
 export const WithControlButtons: Story = {
@@ -239,7 +272,12 @@ export const WithControlButtons: Story = {
           </button>
           <button
             onClick={() => {
-              cropperRef.current?.setBounds({ x: 50, y: 50, width: 200, height: 200 });
+              cropperRef.current?.setBounds({
+                x: 50,
+                y: 50,
+                width: 200,
+                height: 200,
+              });
             }}
           >
             Set Bounds
@@ -256,6 +294,33 @@ export const WithControlButtons: Story = {
     crossOrigin: 'anonymous',
     style: { maxHeight: '500px', width: '100%' },
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Wait for the cropper to be ready
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Find and verify all control buttons are present
+    const getBoundsButton = canvas.getByText('Get Bounds');
+    const setBoundsButton = canvas.getByText('Set Bounds');
+    const resetButton = canvas.getByText('Reset');
+    const clearButton = canvas.getByText('Clear');
+
+    await expect(getBoundsButton).toBeInTheDocument();
+    await expect(setBoundsButton).toBeInTheDocument();
+    await expect(resetButton).toBeInTheDocument();
+    await expect(clearButton).toBeInTheDocument();
+
+    // Test Set Bounds button
+    await userEvent.click(setBoundsButton);
+
+    // Wait for bounds to update
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Verify cropper canvas exists
+    const cropperCanvas = canvasElement.querySelector('cropper-canvas');
+    await expect(cropperCanvas).toBeInTheDocument();
+  },
 };
 
 export const ReadOnly: Story = {
@@ -267,6 +332,23 @@ export const ReadOnly: Story = {
     resizable: false,
     zoomable: false,
     style: { maxHeight: '500px', width: '100%' },
+  },
+  play: async ({ canvasElement }) => {
+    // Wait for the cropper to initialize
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Verify cropper components exist
+    const cropperCanvas = canvasElement.querySelector('cropper-canvas');
+    const cropperSelection = canvasElement.querySelector('cropper-selection');
+
+    await expect(cropperCanvas).toBeInTheDocument();
+    await expect(cropperSelection).toBeInTheDocument();
+
+    // Verify that the selection has read-only attributes (not set when false)
+    // When attributes are false, they are not rendered in the DOM
+    await expect(cropperSelection).not.toHaveAttribute('movable');
+    await expect(cropperSelection).not.toHaveAttribute('resizable');
+    await expect(cropperSelection).not.toHaveAttribute('zoomable');
   },
 };
 

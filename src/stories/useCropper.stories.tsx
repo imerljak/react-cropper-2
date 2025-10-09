@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, userEvent, within } from 'storybook/test';
 import { useState } from 'react';
 import { useCropper } from '../hooks/useCropper';
 import type { CropperBounds } from '../types';
@@ -138,6 +139,21 @@ export const WithPreview: Story = {
       </div>
     );
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Wait for the cropper to initialize and preview to render
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // Verify Preview heading is present
+    const previewHeading = canvas.getByText('Preview:');
+    await expect(previewHeading).toBeInTheDocument();
+
+    // Verify the preview image is rendered
+    const previewImage = canvas.getByAltText('Cropped preview');
+    await expect(previewImage).toBeInTheDocument();
+    await expect(previewImage).toHaveAttribute('src');
+  },
 };
 
 export const WithControlButtons: Story = {
@@ -186,6 +202,36 @@ export const WithControlButtons: Story = {
         </div>
       </div>
     );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Wait for the cropper to be ready
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Verify all control buttons are present
+    const getBoundsButton = canvas.getByText('Get Bounds');
+    const setBoundsButton = canvas.getByText('Set Bounds');
+    const resetButton = canvas.getByText('Reset');
+    const clearButton = canvas.getByText('Clear');
+
+    await expect(getBoundsButton).toBeInTheDocument();
+    await expect(setBoundsButton).toBeInTheDocument();
+    await expect(resetButton).toBeInTheDocument();
+    await expect(clearButton).toBeInTheDocument();
+
+    // Test clicking Set Bounds button
+    await userEvent.click(setBoundsButton);
+
+    // Wait for bounds to update
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Verify cropper still exists after setBounds
+    const cropperCanvas = canvasElement.querySelector('cropper-canvas');
+    await expect(cropperCanvas).toBeInTheDocument();
+
+    // Test Reset button
+    await userEvent.click(resetButton);
   },
 };
 

@@ -12,6 +12,7 @@ module.exports = {
     '*.config.ts',
     'node_modules',
     'examples/**/*',
+    'vitest.shims.d.ts',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
