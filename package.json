@@ -65,7 +65,7 @@
     "react-dom": "^18.0.0"
   },
   "devDependencies": {
-    "@storybook/addon-a11y": "^9.1.10",
+    "@storybook/addon-a11y": "^10.0.6",
     "@storybook/addon-docs": "^9.1.10",
     "@storybook/addon-onboarding": "^9.1.10",
     "@storybook/addon-vitest": "^9.1.10",
