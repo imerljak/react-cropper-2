@@ -67,7 +67,7 @@
   "devDependencies": {
     "@storybook/addon-a11y": "^9.1.10",
     "@storybook/addon-docs": "^9.1.10",
-    "@storybook/addon-onboarding": "^9.1.10",
+    "@storybook/addon-onboarding": "^10.0.6",
     "@storybook/addon-vitest": "^9.1.10",
     "@storybook/react-vite": "^9.1.10",
     "@testing-library/jest-dom": "^6.5.0",
