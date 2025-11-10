@@ -97,7 +97,7 @@
     "typescript": "^5.6.3",
     "vite": "^7.1.9",
     "vite-plugin-dts": "^4.2.3",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.8"
   },
   "engines": {
     "node": ">=20.0.0"
