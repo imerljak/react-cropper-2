@@ -12,18 +12,30 @@ export type { CropperProps, CropperRef } from './components/Cropper';
 
 // Hooks
 export { useCropper } from './hooks/useCropper.tsx';
-export type { UseCropperOptions, UseCropperReturn } from './hooks/useCropper.tsx';
+export type {
+  UseCropperOptions,
+  UseCropperReturn,
+} from './hooks/useCropper.tsx';
 export { useCropperAdvanced } from './hooks/useCropperAdvanced';
-export type { UseCropperAdvancedOptions, UseCropperAdvancedReturn } from './hooks/useCropperAdvanced';
+export type {
+  UseCropperAdvancedOptions,
+  UseCropperAdvancedReturn,
+} from './hooks/useCropperAdvanced';
 
 // Types
 export type {
   CropperBounds,
-  CropperTransform,
+  TransformMatrix,
+  ImageSize,
+  CropperElement,
   CropperCanvasElement,
   CropperImageElement,
   CropperSelectionElement,
-  CropperEventDetail,
-  CropperEvent,
+  CropperCanvasActionEvent,
+  CropperCanvasActionStartEvent,
+  CropperCanvasActionMoveEvent,
+  CropperCanvasActionEndEvent,
+  CropperSelectionChangeEvent,
+  CropperImageTransformEvent,
   CropperEventHandler,
 } from './types';
