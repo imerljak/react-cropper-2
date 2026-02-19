@@ -3,7 +3,12 @@ import {
   useCropperAdvanced,
   type UseCropperAdvancedOptions,
 } from './useCropperAdvanced';
-import type { CropperBounds } from '../types';
+import type {
+  CropperBounds,
+  CropperCanvasElement,
+  CropperImageElement,
+  CropperSelectionElement,
+} from '../types';
 
 /**
  * Configuration options for useCropper hook
@@ -42,6 +47,8 @@ export interface UseCropperOptions
   multiple?: boolean;
   /** Show selection outline */
   outlined?: boolean;
+  /** Show canvas grid */
+  grid?: boolean;
 }
 
 /**
@@ -84,6 +91,13 @@ export interface UseCropperReturn {
   getCroppedCanvas: (
     options?: GetCroppedCanvasOptions
   ) => Promise<HTMLCanvasElement | null>;
+
+  /** Get the canvas element */
+  getCanvas: () => CropperCanvasElement | null;
+  /** Get selection element */
+  getSelection: () => CropperSelectionElement | null;
+  /** Get the image element */
+  getImage: () => CropperImageElement | null;
 }
 
 /**
@@ -133,12 +147,14 @@ export function useCropper(options: UseCropperOptions): UseCropperReturn {
     zoomable = true,
     multiple = false,
     outlined = true,
+    grid = true,
     ...advancedOptions
   } = options;
 
   const {
     canvasRef,
     selectionRef,
+    imageRef,
     bounds,
     isReady,
     getBounds,
@@ -146,6 +162,9 @@ export function useCropper(options: UseCropperOptions): UseCropperReturn {
     reset,
     clear,
     getCroppedCanvas,
+    getCanvas,
+    getSelection,
+    getImage,
   } = useCropperAdvanced({
     ...advancedOptions,
     autoInitialize: true,
@@ -163,6 +182,7 @@ export function useCropper(options: UseCropperOptions): UseCropperReturn {
           background={background}
         >
           <cropper-image
+            ref={imageRef}
             src={src}
             alt={alt}
             crossorigin={crossOrigin}
@@ -182,7 +202,7 @@ export function useCropper(options: UseCropperOptions): UseCropperReturn {
             multiple={multiple}
             outlined={outlined}
           >
-            <cropper-grid role="grid" bordered covered />
+            {grid && <cropper-grid role="grid" bordered covered />}
             <cropper-crosshair centered />
             <cropper-handle
               action="move"
@@ -203,6 +223,7 @@ export function useCropper(options: UseCropperOptions): UseCropperReturn {
     [
       canvasRef,
       selectionRef,
+      imageRef,
       src,
       alt,
       crossOrigin,
@@ -219,6 +240,7 @@ export function useCropper(options: UseCropperOptions): UseCropperReturn {
       zoomable,
       multiple,
       outlined,
+      grid,
     ]
   );
 
@@ -231,5 +253,8 @@ export function useCropper(options: UseCropperOptions): UseCropperReturn {
     reset,
     clear,
     getCroppedCanvas,
+    getCanvas,
+    getSelection,
+    getImage,
   };
 }
