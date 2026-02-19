@@ -7,14 +7,17 @@ vi.mock('./useCropperAdvanced', () => ({
   useCropperAdvanced: vi.fn(() => ({
     canvasRef: { current: null },
     selectionRef: { current: null },
+    imageRef: { current: null },
     bounds: null,
     isReady: false,
     getBounds: vi.fn(() => null),
     setBounds: vi.fn(),
     reset: vi.fn(),
     clear: vi.fn(),
+    getCroppedCanvas: vi.fn(() => Promise.resolve(null)),
     getCanvas: vi.fn(() => null),
     getSelection: vi.fn(() => null),
+    getImage: vi.fn(() => null),
   })),
 }));
 
@@ -106,6 +109,7 @@ describe('useCropper', () => {
     const onCropStart = vi.fn();
     const onCropMove = vi.fn();
     const onCropEnd = vi.fn();
+    const onTransform = vi.fn();
 
     renderHook(() =>
       useCropper({
@@ -115,6 +119,7 @@ describe('useCropper', () => {
         onCropStart,
         onCropMove,
         onCropEnd,
+        onTransform,
       })
     );
 
@@ -122,6 +127,34 @@ describe('useCropper', () => {
     // The actual invocation is tested in useCropperAdvanced tests
     expect(onReady).toBeDefined();
     expect(onChange).toBeDefined();
+    expect(onTransform).toBeDefined();
+  });
+
+  it('should return element accessor methods', () => {
+    const { result } = renderHook(() =>
+      useCropper({
+        src: '/test.jpg',
+      })
+    );
+
+    expect(result.current.getCanvas).toBeDefined();
+    expect(typeof result.current.getCanvas).toBe('function');
+    expect(result.current.getSelection).toBeDefined();
+    expect(typeof result.current.getSelection).toBe('function');
+    expect(result.current.getImage).toBeDefined();
+    expect(typeof result.current.getImage).toBe('function');
+  });
+
+  it('should return null from element accessors when elements not mounted', () => {
+    const { result } = renderHook(() =>
+      useCropper({
+        src: '/test.jpg',
+      })
+    );
+
+    expect(result.current.getCanvas()).toBeNull();
+    expect(result.current.getSelection()).toBeNull();
+    expect(result.current.getImage()).toBeNull();
   });
 
   it('should use alt text when provided', () => {

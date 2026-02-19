@@ -82,7 +82,7 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
       outlined = true,
       className,
       style,
-      grid,
+      grid = true,
       onReady,
       onChange,
       onCropStart,

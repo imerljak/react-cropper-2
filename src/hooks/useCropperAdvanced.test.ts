@@ -341,6 +341,22 @@ describe('useCropper Hook', () => {
       });
     });
 
+    it('should attach onTransform listener to image element', async () => {
+      const onTransform = vi.fn();
+      const { result } = renderHookWithRefs({ onTransform });
+
+      await waitFor(() => {
+        expect(result.current.isReady).toBe(true);
+      });
+
+      const event = new CustomEvent('transform');
+      mockSelection.dispatchEvent(event);
+
+      await waitFor(() => {
+        expect(onTransform).toHaveBeenCalledTimes(1);
+      });
+    });
+
     it('should cleanup event listeners on unmount', () => {
       const onChange = vi.fn();
       const { result, unmount, rerender } = renderHook(() =>
@@ -391,11 +407,24 @@ describe('useCropper Hook', () => {
       expect(selection).toBe(mockSelection);
     });
 
+    it('should return image element via getImage', () => {
+      const { result } = renderHook(() => useCropperAdvanced());
+
+      Object.defineProperty(result.current.imageRef, 'current', {
+        value: mockSelection,
+        writable: true,
+      });
+
+      const image = result.current.getImage();
+      expect(image).toBe(mockSelection);
+    });
+
     it('should return null when elements not set', () => {
       const { result } = renderHook(() => useCropperAdvanced());
 
       expect(result.current.getCanvas()).toBeNull();
       expect(result.current.getSelection()).toBeNull();
+      expect(result.current.getImage()).toBeNull();
     });
   });
 });
