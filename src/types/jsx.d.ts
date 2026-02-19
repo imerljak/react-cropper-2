@@ -11,9 +11,13 @@ declare module 'react' {
       'cropper-canvas': React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement> & {
           background?: boolean | undefined;
+          scaleStep?: number | undefined;
           class?: string | undefined;
           style?: CSSProperties | undefined;
           ref?: React.Ref<HTMLElement> | undefined;
+          shadowRootMode?: 'closed' | 'open' | undefined;
+          slottable?: boolean | undefined;
+          themeColor?: string | undefined;
         },
         HTMLElement
       >;
@@ -27,6 +31,9 @@ declare module 'react' {
           skewable?: boolean | undefined;
           translatable?: boolean | undefined;
           ref?: React.Ref<HTMLElement> | undefined;
+          shadowRootMode?: 'closed' | 'open' | undefined;
+          slottable?: boolean | undefined;
+          themeColor?: string | undefined;
         },
         HTMLElement
       >;
@@ -45,20 +52,31 @@ declare module 'react' {
           multiple?: boolean | undefined;
           outlined?: boolean | undefined;
           ref?: React.Ref<HTMLElement> | undefined;
+          shadowRootMode?: 'closed' | 'open' | undefined;
+          slottable?: boolean | undefined;
+          themeColor?: string | undefined;
         },
         HTMLElement
       >;
       'cropper-grid': React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement> & {
           role?: string | undefined;
+          rows?: number | undefined;
+          columns?: number | undefined;
           bordered?: boolean | undefined;
           covered?: boolean | undefined;
+          shadowRootMode?: 'closed' | 'open' | undefined;
+          slottable?: boolean | undefined;
+          themeColor?: string | undefined;
         },
         HTMLElement
       >;
       'cropper-crosshair': React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement> & {
           centered?: boolean | undefined;
+          shadowRootMode?: 'closed' | 'open' | undefined;
+          slottable?: boolean | undefined;
+          themeColor?: string | undefined;
         },
         HTMLElement
       >;
@@ -67,8 +85,22 @@ declare module 'react' {
           action?: string | undefined;
           'theme-color'?: string | undefined;
           plain?: boolean | undefined;
+          shadowRootMode?: 'closed' | 'open' | undefined;
+          slottable?: boolean | undefined;
+          themeColor?: string | undefined;
         },
         HTMLElement
+      >;
+      'cropper-shade': React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement> & {
+          x?: number | undefined;
+          y?: number | undefined;
+          width?: number | undefined;
+          height?: number | undefined;
+          shadowRootMode?: 'closed' | 'open' | undefined;
+          slottable?: boolean | undefined;
+          themeColor?: string | undefined;
+        }
       >;
     }
   }
