@@ -34,27 +34,7 @@ jobs:
           fetch-depth: 0
 
       - name: Check commit messages
-        run: |
-          COMMITS=$(git log origin/${{ github.base_ref }}..HEAD --pretty=format:"%s")
-          VALID=true
-
-          while IFS= read -r commit; do
-            if ! echo "$commit" | grep -qE "^(feat|fix|docs|style|refactor|perf|test|chore)(\(.+\))?: .+"; then
-              echo "❌ Invalid commit message: $commit"
-              VALID=false
-            else
-              echo "✅ Valid commit message: $commit"
-            fi
-          done <<< "$COMMITS"
-
-          if [ "$VALID" = false ]; then
-            echo ""
-            echo "Commits must follow Conventional Commits format:"
-            echo "  type(scope?): subject"
-            echo ""
-            echo "Types: feat, fix, docs, style, refactor, perf, test, chore"
-            exit 1
-          fi
+        uses: webiny/action-conventional-commits@v1.3.0
 
   size-check:
     name: Bundle Size Check
