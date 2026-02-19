@@ -4,6 +4,12 @@ import type {
   CropperSelectionElement,
   CropperBounds,
   CropperEventHandler,
+  CropperImageElement,
+  CropperSelectionChangeEvent,
+  CropperCanvasActionStartEvent,
+  CropperCanvasActionMoveEvent,
+  CropperCanvasActionEndEvent,
+  CropperImageTransformEvent,
 } from '../types';
 
 /**
@@ -13,13 +19,15 @@ export interface UseCropperAdvancedOptions {
   /** Callback when cropper is ready */
   onReady?: (canvas: CropperCanvasElement) => void;
   /** Callback when crop area changes */
-  onChange?: CropperEventHandler;
+  onChange?: CropperEventHandler<CropperSelectionChangeEvent>;
   /** Callback when crop action starts */
-  onCropStart?: CropperEventHandler;
+  onCropStart?: CropperEventHandler<CropperCanvasActionStartEvent>;
   /** Callback when crop action moves */
-  onCropMove?: CropperEventHandler;
+  onCropMove?: CropperEventHandler<CropperCanvasActionMoveEvent>;
   /** Callback when crop action ends */
-  onCropEnd?: CropperEventHandler;
+  onCropEnd?: CropperEventHandler<CropperCanvasActionEndEvent>;
+  /** Calback when image transforms */
+  onTransform?: CropperEventHandler<CropperImageTransformEvent>;
   /** Auto-initialize on mount */
   autoInitialize?: boolean;
 }
@@ -33,7 +41,10 @@ export interface GetCroppedCanvasOptions {
   /** Height of the output canvas */
   height?: number;
   /** Callback before drawing the image onto the canvas */
-  beforeDraw?: (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => void;
+  beforeDraw?: (
+    context: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement
+  ) => void;
 }
 
 /**
@@ -44,6 +55,8 @@ export interface UseCropperAdvancedReturn {
   canvasRef: React.RefObject<CropperCanvasElement | null>;
   /** Ref to attach to cropper-selection element */
   selectionRef: React.RefObject<CropperSelectionElement | null>;
+  /** Ref to attach to cropper-image element */
+  imageRef: React.RefObject<CropperImageElement | null>;
   /** Current crop bounds */
   bounds: CropperBounds | null;
   /** Whether the cropper is ready */
@@ -60,8 +73,12 @@ export interface UseCropperAdvancedReturn {
   getCanvas: () => CropperCanvasElement | null;
   /** Get selection element */
   getSelection: () => CropperSelectionElement | null;
+  /** Get the image element */
+  getImage: () => CropperImageElement | null;
   /** Get the cropped area as a canvas element */
-  getCroppedCanvas: (options?: GetCroppedCanvasOptions) => Promise<HTMLCanvasElement | null>;
+  getCroppedCanvas: (
+    options?: GetCroppedCanvasOptions
+  ) => Promise<HTMLCanvasElement | null>;
 }
 
 /**
@@ -78,18 +95,22 @@ export interface UseCropperAdvancedReturn {
  *
  * // Then manually render cropper elements with refs attached
  */
-export function useCropperAdvanced(options: UseCropperAdvancedOptions = {}): UseCropperAdvancedReturn {
+export function useCropperAdvanced(
+  options: UseCropperAdvancedOptions = {}
+): UseCropperAdvancedReturn {
   const {
     onReady,
     onChange,
     onCropStart,
     onCropMove,
     onCropEnd,
+    onTransform,
     autoInitialize = true,
   } = options;
 
   const canvasRef = useRef<CropperCanvasElement>(null);
   const selectionRef = useRef<CropperSelectionElement>(null);
+  const imageRef = useRef<CropperImageElement>(null);
   const [bounds, setBoundsState] = useState<CropperBounds | null>(null);
   const [isReady, setIsReady] = useState(false);
 
@@ -99,6 +120,7 @@ export function useCropperAdvanced(options: UseCropperAdvancedOptions = {}): Use
   const onCropStartRef = useRef(onCropStart);
   const onCropMoveRef = useRef(onCropMove);
   const onCropEndRef = useRef(onCropEnd);
+  const onTransformRef = useRef(onTransform);
 
   // Update callback refs when they change
   useEffect(() => {
@@ -107,6 +129,7 @@ export function useCropperAdvanced(options: UseCropperAdvancedOptions = {}): Use
     onCropStartRef.current = onCropStart;
     onCropMoveRef.current = onCropMove;
     onCropEndRef.current = onCropEnd;
+    onTransformRef.current = onTransform;
   });
 
   // Get current bounds from selection properties
@@ -186,9 +209,16 @@ export function useCropperAdvanced(options: UseCropperAdvancedOptions = {}): Use
     []
   );
 
+  const getImage = useCallback(
+    (): CropperImageElement | null => imageRef.current,
+    []
+  );
+
   // Get cropped canvas
   const getCroppedCanvas = useCallback(
-    async (options?: GetCroppedCanvasOptions): Promise<HTMLCanvasElement | null> => {
+    async (
+      options?: GetCroppedCanvasOptions
+    ): Promise<HTMLCanvasElement | null> => {
       const selection = selectionRef.current;
       if (!selection) return null;
       // Check if the $toCanvas method exists (web component might not be fully initialized)
@@ -210,8 +240,9 @@ export function useCropperAdvanced(options: UseCropperAdvancedOptions = {}): Use
 
     const canvas = canvasRef.current;
     const selection = selectionRef.current;
+    const image = imageRef.current;
 
-    if (canvas && selection && !refsReady) {
+    if (canvas && selection && image && !refsReady) {
       setRefsReady(true);
     }
   }, [autoInitialize, refsReady]);
@@ -222,8 +253,9 @@ export function useCropperAdvanced(options: UseCropperAdvancedOptions = {}): Use
 
     const canvas = canvasRef.current;
     const selection = selectionRef.current;
+    const image = imageRef.current;
 
-    if (!canvas || !selection) return;
+    if (!canvas || !selection || !image) return;
 
     // Wait for web component to be fully initialized
     // CropperJS web components need time to set up their methods
@@ -253,7 +285,9 @@ export function useCropperAdvanced(options: UseCropperAdvancedOptions = {}): Use
     checkReady();
 
     // Update bounds on change
-    const handleChange: CropperEventHandler = (event) => {
+    const handleChange: CropperEventHandler<CropperSelectionChangeEvent> = (
+      event
+    ) => {
       const newBounds = getBounds();
       if (newBounds) {
         setBoundsState(newBounds);
@@ -284,13 +318,32 @@ export function useCropperAdvanced(options: UseCropperAdvancedOptions = {}): Use
     addEventListener(selection, 'change', handleChange as EventListener);
 
     if (onCropStartRef.current) {
-      addEventListener(selection, 'cropstart', onCropStartRef.current as EventListener);
+      addEventListener(
+        selection,
+        'cropstart',
+        onCropStartRef.current as EventListener
+      );
     }
     if (onCropMoveRef.current) {
-      addEventListener(selection, 'cropmove', onCropMoveRef.current as EventListener);
+      addEventListener(
+        selection,
+        'cropmove',
+        onCropMoveRef.current as EventListener
+      );
     }
     if (onCropEndRef.current) {
-      addEventListener(selection, 'cropend', onCropEndRef.current as EventListener);
+      addEventListener(
+        selection,
+        'cropend',
+        onCropEndRef.current as EventListener
+      );
+    }
+    if (onTransformRef.current) {
+      addEventListener(
+        image,
+        'transform',
+        onTransformRef.current as EventListener
+      );
     }
 
     // Cleanup
@@ -305,15 +358,12 @@ export function useCropperAdvanced(options: UseCropperAdvancedOptions = {}): Use
       setIsReady(false);
       setRefsReady(false);
     };
-  }, [
-    autoInitialize,
-    refsReady,
-    getBounds,
-  ]);
+  }, [autoInitialize, refsReady, getBounds]);
 
   return {
     canvasRef,
     selectionRef,
+    imageRef,
     bounds,
     isReady,
     getBounds,
@@ -322,6 +372,7 @@ export function useCropperAdvanced(options: UseCropperAdvancedOptions = {}): Use
     clear,
     getCanvas,
     getSelection,
+    getImage,
     getCroppedCanvas,
   };
 }

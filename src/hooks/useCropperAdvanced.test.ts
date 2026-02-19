@@ -75,6 +75,13 @@ describe('useCropper Hook', () => {
           configurable: true,
         });
       }
+      if (hook.imageRef.current === null) {
+        Object.defineProperty(hook.imageRef, 'current', {
+          value: mockSelection,
+          writable: true,
+          configurable: true,
+        });
+      }
 
       return null;
     }
