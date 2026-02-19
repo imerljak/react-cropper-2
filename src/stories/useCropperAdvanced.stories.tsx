@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { useCropperAdvanced } from '../hooks/useCropperAdvanced';
-import type { CropperBounds } from '../types';
+import type { CropperBounds, TransformMatrix } from '../types';
 
 const meta = {
   title: 'Hooks/useCropperAdvanced',
@@ -18,13 +18,14 @@ const sampleImage = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df
 
 export const Default: Story = {
   render: () => {
-    const { canvasRef, selectionRef } = useCropperAdvanced({
+    const { canvasRef, selectionRef, imageRef } = useCropperAdvanced({
       autoInitialize: true,
     });
 
     return (
       <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
         <cropper-image
+          ref={imageRef}
           src={sampleImage}
           alt="Sample image"
           crossorigin="anonymous"
@@ -59,13 +60,14 @@ export const Default: Story = {
 
 export const WithAspectRatio: Story = {
   render: () => {
-    const { canvasRef, selectionRef } = useCropperAdvanced({
+    const { canvasRef, selectionRef, imageRef } = useCropperAdvanced({
       autoInitialize: true,
     });
 
     return (
       <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
         <cropper-image
+          ref={imageRef}
           src={sampleImage}
           alt="Sample image with 16:9 aspect ratio"
           crossorigin="anonymous"
@@ -103,7 +105,7 @@ export const WithBoundsTracking: Story = {
   render: () => {
     const [bounds, setBounds] = useState<CropperBounds | null>(null);
 
-    const { canvasRef, selectionRef, getBounds } = useCropperAdvanced({
+    const { canvasRef, selectionRef, imageRef, getBounds } = useCropperAdvanced({
       autoInitialize: true,
       onChange: () => {
         const currentBounds = getBounds();
@@ -115,6 +117,7 @@ export const WithBoundsTracking: Story = {
       <div>
         <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
           <cropper-image
+            ref={imageRef}
             src={sampleImage}
             alt="Sample image with bounds tracking"
             crossorigin="anonymous"
@@ -172,7 +175,7 @@ export const WithPreview: Story = {
       });
     };
 
-    const { canvasRef, selectionRef, getCroppedCanvas } = useCropperAdvanced({
+    const { canvasRef, selectionRef, imageRef, getCroppedCanvas } = useCropperAdvanced({
       autoInitialize: true,
       onReady: () => {
         void getCroppedCanvas().then(updatePreview);
@@ -186,6 +189,7 @@ export const WithPreview: Story = {
       <div>
         <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
           <cropper-image
+            ref={imageRef}
             src={sampleImage}
             alt="Sample image with live preview"
             crossorigin="anonymous"
@@ -238,7 +242,7 @@ export const WithPreview: Story = {
 
 export const WithControlButtons: Story = {
   render: () => {
-    const { canvasRef, selectionRef, getBounds, setBounds, reset, clear } = useCropperAdvanced({
+    const { canvasRef, selectionRef, imageRef, getBounds, setBounds, reset, clear } = useCropperAdvanced({
       autoInitialize: true,
     });
 
@@ -246,6 +250,7 @@ export const WithControlButtons: Story = {
       <div>
         <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
           <cropper-image
+            ref={imageRef}
             src={sampleImage}
             alt="Sample image with control buttons"
             crossorigin="anonymous"
@@ -312,15 +317,71 @@ export const WithControlButtons: Story = {
   },
 };
 
+export const WithOnTransform: Story = {
+  render: () => {
+    const [transform, setTransform] = useState<TransformMatrix | null>(null);
+
+    const { canvasRef, selectionRef, imageRef } = useCropperAdvanced({
+      autoInitialize: true,
+      onTransform: (e) => {
+        setTransform(e.detail.matrix);
+      },
+    });
+
+    return (
+      <div>
+        <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
+          <cropper-image
+            ref={imageRef}
+            src={sampleImage}
+            alt="Sample image — rotate or zoom to see transform"
+            crossorigin="anonymous"
+            rotatable
+            scalable
+            translatable
+          />
+          <cropper-selection
+            ref={selectionRef}
+            initial-coverage={0.8}
+            movable
+            resizable
+            zoomable
+            outlined
+          >
+            <cropper-grid role="grid" bordered covered />
+            <cropper-crosshair centered />
+            <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)" />
+            <cropper-handle action="n-resize" />
+            <cropper-handle action="e-resize" />
+            <cropper-handle action="s-resize" />
+            <cropper-handle action="w-resize" />
+            <cropper-handle action="ne-resize" />
+            <cropper-handle action="nw-resize" />
+            <cropper-handle action="se-resize" />
+            <cropper-handle action="sw-resize" />
+          </cropper-selection>
+        </cropper-canvas>
+        <div style={{ marginTop: '1rem', fontSize: '0.875rem' }}>
+          <strong>Transform matrix</strong>{' '}
+          <span style={{ color: '#888' }}>(rotate or zoom the image)</span>
+          <pre style={{ margin: '0.25rem 0 0' }}>
+            {transform ? JSON.stringify(transform) : 'no transform yet'}
+          </pre>
+        </div>
+      </div>
+    );
+  },
+};
+
 export const MinimalSetup: Story = {
   render: () => {
-    const { canvasRef, selectionRef } = useCropperAdvanced({
+    const { canvasRef, selectionRef, imageRef } = useCropperAdvanced({
       autoInitialize: true,
     });
 
     return (
       <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }}>
-        <cropper-image src={sampleImage} alt="Minimal setup" crossorigin="anonymous" />
+        <cropper-image ref={imageRef} src={sampleImage} alt="Minimal setup" crossorigin="anonymous" />
         <cropper-selection ref={selectionRef}>
           <cropper-grid role="grid" />
         </cropper-selection>
@@ -331,13 +392,14 @@ export const MinimalSetup: Story = {
 
 export const CustomHandles: Story = {
   render: () => {
-    const { canvasRef, selectionRef } = useCropperAdvanced({
+    const { canvasRef, selectionRef, imageRef } = useCropperAdvanced({
       autoInitialize: true,
     });
 
     return (
       <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
         <cropper-image
+          ref={imageRef}
           src={sampleImage}
           alt="Custom handles"
           crossorigin="anonymous"
@@ -373,13 +435,14 @@ export const CustomHandles: Story = {
 
 export const ReadOnly: Story = {
   render: () => {
-    const { canvasRef, selectionRef } = useCropperAdvanced({
+    const { canvasRef, selectionRef, imageRef } = useCropperAdvanced({
       autoInitialize: true,
     });
 
     return (
       <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
         <cropper-image
+          ref={imageRef}
           src={sampleImage}
           alt="Read-only cropper"
           crossorigin="anonymous"

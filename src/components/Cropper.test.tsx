@@ -146,6 +146,17 @@ describe('Cropper Component', () => {
       expect(onCropEnd).toHaveBeenCalledTimes(1);
     });
 
+    it('should attach onTransform listener to image element', () => {
+      const onTransform = vi.fn();
+      render(<Cropper src="/test-image.jpg" onTransform={onTransform} />);
+
+      const image = document.querySelector('cropper-image');
+      const event = new CustomEvent('transform');
+      image?.dispatchEvent(event);
+
+      expect(onTransform).toHaveBeenCalledTimes(1);
+    });
+
     it('should cleanup event listeners on unmount', () => {
       const onChange = vi.fn();
       const { unmount } = render(
@@ -160,6 +171,22 @@ describe('Cropper Component', () => {
 
       // Should not be called after unmount
       expect(onChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Props Configuration', () => {
+    it('should render cropper-grid by default', () => {
+      render(<Cropper src="/test-image.jpg" />);
+
+      const grid = document.querySelector('cropper-grid');
+      expect(grid).toBeInTheDocument();
+    });
+
+    it('should not render cropper-grid when grid is false', () => {
+      render(<Cropper src="/test-image.jpg" grid={false} />);
+
+      const grid = document.querySelector('cropper-grid');
+      expect(grid).not.toBeInTheDocument();
     });
   });
 
@@ -202,6 +229,22 @@ describe('Cropper Component', () => {
 
       expect(ref.current.clear).toBeDefined();
       expect(typeof ref.current.clear).toBe('function');
+    });
+
+    it('should expose getSelection method via ref', () => {
+      const ref = { current: null } as unknown as React.RefObject<CropperRef>;
+      render(<Cropper ref={ref} src="/test-image.jpg" />);
+
+      expect(ref.current.getSelection).toBeDefined();
+      expect(typeof ref.current.getSelection).toBe('function');
+    });
+
+    it('should expose getImage method via ref', () => {
+      const ref = { current: null } as unknown as React.RefObject<CropperRef>;
+      render(<Cropper ref={ref} src="/test-image.jpg" />);
+
+      expect(ref.current.getImage).toBeDefined();
+      expect(typeof ref.current.getImage).toBe('function');
     });
   });
 

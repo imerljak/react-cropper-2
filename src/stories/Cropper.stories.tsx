@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 import { useRef, useState } from 'react';
 import { Cropper, type CropperRef } from '../components/Cropper';
-import type { CropperBounds } from '../types';
+import type { CropperBounds, TransformMatrix } from '../types';
 
 const meta = {
   title: 'Components/Cropper',
@@ -149,7 +149,7 @@ export const WithEventHandlers: Story = {
           onChange={(e) => {
             // eslint-disable-next-line no-console
             console.log('Crop changed:', e.detail);
-            setBounds(e.detail.bounds ?? null);
+            setBounds(e.detail);
           }}
           onCropStart={() => {
             // eslint-disable-next-line no-console
@@ -358,6 +358,56 @@ export const NoBackground: Story = {
     alt: 'Cropper without background',
     crossOrigin: 'anonymous',
     background: false,
+    style: { maxHeight: '500px', width: '100%' },
+  },
+};
+
+export const WithGrid: Story = {
+  args: {
+    src: sampleImage,
+    alt: 'Cropper with grid',
+    crossOrigin: 'anonymous',
+    grid: true,
+    style: { maxHeight: '500px', width: '100%' },
+  },
+};
+
+export const NoGrid: Story = {
+  args: {
+    src: sampleImage,
+    alt: 'Cropper without grid',
+    crossOrigin: 'anonymous',
+    grid: false,
+    style: { maxHeight: '500px', width: '100%' },
+  },
+};
+
+export const WithOnTransform: Story = {
+  render: (args) => {
+    const [transform, setTransform] = useState<TransformMatrix | null>(null);
+
+    return (
+      <div>
+        <Cropper
+          {...args}
+          onTransform={(e) => {
+            setTransform(e.detail.matrix);
+          }}
+        />
+        <div style={{ marginTop: '1rem', fontSize: '0.875rem' }}>
+          <strong>Transform matrix</strong>{' '}
+          <span style={{ color: '#888' }}>(rotate or zoom the image)</span>
+          <pre style={{ margin: '0.25rem 0 0' }}>
+            {transform ? JSON.stringify(transform) : 'no transform yet'}
+          </pre>
+        </div>
+      </div>
+    );
+  },
+  args: {
+    src: sampleImage,
+    alt: 'Sample image — rotate or zoom to see transform',
+    crossOrigin: 'anonymous',
     style: { maxHeight: '500px', width: '100%' },
   },
 };

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 import { useState } from 'react';
 import { useCropper } from '../hooks/useCropper';
-import type { CropperBounds } from '../types';
+import type { CropperBounds, TransformMatrix } from '../types';
 
 const meta = {
   title: 'Hooks/useCropper',
@@ -294,5 +294,33 @@ export const WithCustomClassName: Story = {
         borderRadius: '8px',
       },
     });
+  },
+};
+
+export const WithOnTransform: Story = {
+  render: () => {
+    const [transform, setTransform] = useState<TransformMatrix | null>(null);
+
+    const { renderCropper } = useCropper({
+      src: sampleImage,
+      alt: 'Sample image — rotate or zoom to see transform',
+      crossOrigin: 'anonymous',
+      onTransform: (e) => {
+        setTransform(e.detail.matrix);
+      },
+    });
+
+    return (
+      <div>
+        {renderCropper({ style: { maxHeight: '500px', width: '100%' } })}
+        <div style={{ marginTop: '1rem', fontSize: '0.875rem' }}>
+          <strong>Transform matrix</strong>{' '}
+          <span style={{ color: '#888' }}>(rotate or zoom the image)</span>
+          <pre style={{ margin: '0.25rem 0 0' }}>
+            {transform ? JSON.stringify(transform) : 'no transform yet'}
+          </pre>
+        </div>
+      </div>
+    );
   },
 };
