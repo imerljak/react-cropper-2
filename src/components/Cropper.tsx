@@ -1,69 +1,24 @@
 import { forwardRef, useImperativeHandle, type CSSProperties } from 'react';
-import { useCropperAdvanced } from '../hooks/useCropperAdvanced';
-import type { CropperCanvasElement, CropperEventHandler, CropperBounds } from '../types';
+import {
+  useCropperAdvanced,
+  type GetCroppedCanvasOptions,
+} from '../hooks/useCropperAdvanced';
+import type {
+  CropperBounds,
+  CropperCanvasElement,
+  CropperSelectionElement,
+  CropperImageElement,
+} from '../types';
+import type { UseCropperOptions } from '../hooks/useCropper';
 
 /**
  * Props for the Cropper component
  */
-export interface CropperProps {
-  /** Image source URL */
-  src: string;
-  /** Alt text for the image */
-  alt?: string;
-  /** CORS setting for the image */
-  crossOrigin?: 'anonymous' | 'use-credentials' | '';
-  /** Aspect ratio for the crop selection (e.g., 16/9, 1, 4/3) */
-  aspectRatio?: number;
-  /** Initial aspect ratio */
-  initialAspectRatio?: number;
-  /** Initial coverage of the image (0-1) */
-  initialCoverage?: number;
-  /** Enable background rendering */
-  background?: boolean;
-  /** Enable rotation */
-  rotatable?: boolean;
-  /** Enable scaling */
-  scalable?: boolean;
-  /** Enable skewing */
-  skewable?: boolean;
-  /** Enable translation */
-  translatable?: boolean;
-  /** Enable selection movement */
-  movable?: boolean;
-  /** Enable selection resizing */
-  resizable?: boolean;
-  /** Enable zooming */
-  zoomable?: boolean;
-  /** Enable multiple selections */
-  multiple?: boolean;
-  /** Show outlined selection */
-  outlined?: boolean;
+export interface CropperProps extends UseCropperOptions {
   /** Custom class name */
   className?: string;
   /** Custom styles */
   style?: CSSProperties;
-  /** Callback when cropper is ready */
-  onReady?: (canvas: CropperCanvasElement) => void;
-  /** Callback when crop area changes */
-  onChange?: CropperEventHandler;
-  /** Callback when crop action starts */
-  onCropStart?: CropperEventHandler;
-  /** Callback when crop action moves */
-  onCropMove?: CropperEventHandler;
-  /** Callback when crop action ends */
-  onCropEnd?: CropperEventHandler;
-}
-
-/**
- * Options for getting the cropped canvas
- */
-export interface GetCroppedCanvasOptions {
-  /** Width of the output canvas */
-  width?: number;
-  /** Height of the output canvas */
-  height?: number;
-  /** Callback before drawing the image onto the canvas */
-  beforeDraw?: (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => void;
 }
 
 /**
@@ -72,6 +27,10 @@ export interface GetCroppedCanvasOptions {
 export interface CropperRef {
   /** Get the canvas element */
   getCanvas: () => CropperCanvasElement | null;
+  /** Get selection element */
+  getSelection: () => CropperSelectionElement | null;
+  /** Get the image element */
+  getImage: () => CropperImageElement | null;
   /** Get current crop bounds */
   getBounds: () => CropperBounds | null;
   /** Set crop bounds */
@@ -81,7 +40,9 @@ export interface CropperRef {
   /** Clear the selection */
   clear: () => void;
   /** Get the cropped area as a canvas element */
-  getCroppedCanvas: (options?: GetCroppedCanvasOptions) => Promise<HTMLCanvasElement | null>;
+  getCroppedCanvas: (
+    options?: GetCroppedCanvasOptions
+  ) => Promise<HTMLCanvasElement | null>;
 }
 
 /**
@@ -121,11 +82,13 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
       outlined = true,
       className,
       style,
+      grid,
       onReady,
       onChange,
       onCropStart,
       onCropMove,
       onCropEnd,
+      onTransform,
     },
     ref
   ) => {
@@ -133,18 +96,22 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
     const {
       canvasRef,
       selectionRef,
+      imageRef,
       getCanvas,
       getBounds,
       setBounds,
       reset,
       clear,
       getCroppedCanvas,
+      getImage,
+      getSelection,
     } = useCropperAdvanced({
       ...(onReady && { onReady }),
       ...(onChange && { onChange }),
       ...(onCropStart && { onCropStart }),
       ...(onCropMove && { onCropMove }),
       ...(onCropEnd && { onCropEnd }),
+      ...(onTransform && { onTransform }),
       autoInitialize: true,
     });
 
@@ -153,13 +120,24 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
       ref,
       () => ({
         getCanvas,
+        getSelection,
+        getImage,
         getBounds,
         setBounds,
         reset,
         clear,
         getCroppedCanvas,
       }),
-      [getCanvas, getBounds, setBounds, reset, clear, getCroppedCanvas]
+      [
+        getCanvas,
+        getSelection,
+        getImage,
+        getBounds,
+        setBounds,
+        reset,
+        clear,
+        getCroppedCanvas,
+      ]
     );
 
     return (
@@ -170,6 +148,7 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
         background={background}
       >
         <cropper-image
+          ref={imageRef}
           src={src}
           alt={alt}
           crossorigin={crossOrigin}
@@ -189,9 +168,12 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
           multiple={multiple}
           outlined={outlined}
         >
-          <cropper-grid role="grid" bordered covered />
+          {grid && <cropper-grid role="grid" bordered covered />}
           <cropper-crosshair centered />
-          <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)" />
+          <cropper-handle
+            action="move"
+            theme-color="rgba(255, 255, 255, 0.35)"
+          />
           <cropper-handle action="n-resize" />
           <cropper-handle action="e-resize" />
           <cropper-handle action="s-resize" />
