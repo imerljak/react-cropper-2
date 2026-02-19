@@ -102,6 +102,18 @@ declare module 'react' {
           themeColor?: string | undefined;
         }
       >;
+      'cropper-viewer': React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement> & {
+          /** CSS selector for the cropper-selection to observe. Defaults to closest ancestor. */
+          selection?: string | undefined;
+          /** How the viewer resizes to match the selection aspect ratio. */
+          resize?: 'both' | 'horizontal' | 'vertical' | 'none' | undefined;
+          shadowRootMode?: 'closed' | 'open' | undefined;
+          slottable?: boolean | undefined;
+          themeColor?: string | undefined;
+        },
+        HTMLElement
+      >;
     }
   }
 }
