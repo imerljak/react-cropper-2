@@ -55,6 +55,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,json,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,json,md}\"",
     "typecheck": "tsc --noEmit",
+    "example:basic": "vite --config examples/basic/vite.config.ts",
+    "example:deferred": "vite --config examples/deferred/vite.config.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

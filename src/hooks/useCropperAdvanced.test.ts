@@ -357,6 +357,149 @@ describe('useCropper Hook', () => {
       });
     });
 
+    it('should attach listeners when cropper is conditionally/deferred rendered', async () => {
+      const onChange = vi.fn();
+      let hookReturn: UseCropperAdvancedReturn | null = null;
+      let attachRefs: (() => void) | null = null;
+
+      function TestComponent({ show }: { show: boolean }): null {
+        const hook = useCropperAdvanced({ onChange });
+        hookReturn = hook;
+
+        attachRefs = () => {
+          Object.defineProperty(hook.canvasRef, 'current', {
+            value: mockCanvas,
+            writable: true,
+            configurable: true,
+          });
+          Object.defineProperty(hook.selectionRef, 'current', {
+            value: mockSelection,
+            writable: true,
+            configurable: true,
+          });
+          Object.defineProperty(hook.imageRef, 'current', {
+            value: mockSelection,
+            writable: true,
+            configurable: true,
+          });
+        };
+
+        // Simulate conditional render: only attach refs when show=true
+        if (show && hook.canvasRef.current === null) {
+          attachRefs();
+        }
+
+        return null;
+      }
+
+      const { rerender } = render(createElement(TestComponent, { show: false }));
+
+      // Refs are null — onChange should not be wired up yet
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      expect(hookReturn!.isReady).toBe(false);
+
+      // Simulate the parent re-rendering to show the cropper
+      rerender(createElement(TestComponent, { show: true }));
+
+      await waitFor(() => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        expect(hookReturn!.isReady).toBe(true);
+      });
+
+      const event = new CustomEvent('change', {
+        detail: { bounds: { x: 0, y: 0, width: 100, height: 100 } },
+      });
+      mockSelection.dispatchEvent(event);
+
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('should re-attach listeners after cropper unmounts and remounts', async () => {
+      const onChange = vi.fn();
+      let hookReturn: UseCropperAdvancedReturn | null = null;
+
+      function TestComponent({ show }: { show: boolean }): null {
+        const hook = useCropperAdvanced({ onChange });
+        hookReturn = hook;
+
+        if (show) {
+          if (hook.canvasRef.current === null) {
+            Object.defineProperty(hook.canvasRef, 'current', {
+              value: mockCanvas,
+              writable: true,
+              configurable: true,
+            });
+          }
+          if (hook.selectionRef.current === null) {
+            Object.defineProperty(hook.selectionRef, 'current', {
+              value: mockSelection,
+              writable: true,
+              configurable: true,
+            });
+          }
+          if (hook.imageRef.current === null) {
+            Object.defineProperty(hook.imageRef, 'current', {
+              value: mockSelection,
+              writable: true,
+              configurable: true,
+            });
+          }
+        } else {
+          Object.defineProperty(hook.canvasRef, 'current', {
+            value: null,
+            writable: true,
+            configurable: true,
+          });
+          Object.defineProperty(hook.selectionRef, 'current', {
+            value: null,
+            writable: true,
+            configurable: true,
+          });
+          Object.defineProperty(hook.imageRef, 'current', {
+            value: null,
+            writable: true,
+            configurable: true,
+          });
+        }
+
+        return null;
+      }
+
+      const { rerender } = render(createElement(TestComponent, { show: true }));
+
+      // First mount — wait for ready
+      await waitFor(() => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        expect(hookReturn!.isReady).toBe(true);
+      });
+
+      // Fire event on first mount — should be received
+      mockSelection.dispatchEvent(new CustomEvent('change'));
+      await waitFor(() => { expect(onChange).toHaveBeenCalledTimes(1); });
+
+      // Simulate unmount (Reset)
+      rerender(createElement(TestComponent, { show: false }));
+
+      await waitFor(() => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        expect(hookReturn!.isReady).toBe(false);
+      });
+
+      // Simulate remount (Load Image again)
+      rerender(createElement(TestComponent, { show: true }));
+
+      await waitFor(() => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        expect(hookReturn!.isReady).toBe(true);
+      });
+
+      // Fire event after remount — should fire again
+      mockSelection.dispatchEvent(new CustomEvent('change'));
+      await waitFor(() => { expect(onChange).toHaveBeenCalledTimes(2); });
+    });
+
     it('should cleanup event listeners on unmount', () => {
       const onChange = vi.fn();
       const { result, unmount, rerender } = renderHook(() =>
