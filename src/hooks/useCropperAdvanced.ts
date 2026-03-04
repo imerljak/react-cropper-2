@@ -234,18 +234,26 @@ export function useCropperAdvanced(
   // Track if refs are ready
   const [refsReady, setRefsReady] = useState(false);
 
-  // Check if refs are available
+  // Track ref population — no dep array so this runs after every render.
+  // Handles two transitions:
+  //   null → non-null: cropper mounted (including deferred/conditional render)
+  //   non-null → null: cropper unmounted while the parent component stays mounted
+  //     (e.g. {src && renderCropper()}). Without this, refsReady stays true,
+  //     the listener setup never re-runs, and listeners end up on stale elements.
   useEffect(() => {
     if (!autoInitialize) return;
 
     const canvas = canvasRef.current;
     const selection = selectionRef.current;
     const image = imageRef.current;
+    const allRefsPopulated = !!(canvas && selection && image);
 
-    if (canvas && selection && image && !refsReady) {
+    if (allRefsPopulated && !refsReady) {
       setRefsReady(true);
+    } else if (!allRefsPopulated && refsReady) {
+      setRefsReady(false);
     }
-  }, [autoInitialize, refsReady]);
+  });
 
   // Setup event listeners and initialization
   useEffect(() => {
