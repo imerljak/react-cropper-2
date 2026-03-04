@@ -13,8 +13,10 @@ import type {
 /**
  * Configuration options for useCropper hook
  */
-export interface UseCropperOptions
-  extends Omit<UseCropperAdvancedOptions, 'autoInitialize'> {
+export interface UseCropperOptions extends Omit<
+  UseCropperAdvancedOptions,
+  'autoInitialize'
+> {
   /** Image source URL */
   src: string;
   /** Image alt text */

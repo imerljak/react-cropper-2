@@ -15,7 +15,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const sampleImage = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4';
+const sampleImage =
+  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4';
 
 export const Default: Story = {
   render: () => {

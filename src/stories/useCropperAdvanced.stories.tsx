@@ -14,7 +14,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const sampleImage = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4';
+const sampleImage =
+  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4';
 
 export const Default: Story = {
   render: () => {
@@ -23,7 +24,11 @@ export const Default: Story = {
     });
 
     return (
-      <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
+      <cropper-canvas
+        ref={canvasRef}
+        style={{ maxHeight: '500px', width: '100%' }}
+        background
+      >
         <cropper-image
           ref={imageRef}
           src={sampleImage}
@@ -43,7 +48,10 @@ export const Default: Story = {
         >
           <cropper-grid role="grid" bordered covered />
           <cropper-crosshair centered />
-          <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)" />
+          <cropper-handle
+            action="move"
+            theme-color="rgba(255, 255, 255, 0.35)"
+          />
           <cropper-handle action="n-resize" />
           <cropper-handle action="e-resize" />
           <cropper-handle action="s-resize" />
@@ -65,7 +73,11 @@ export const WithAspectRatio: Story = {
     });
 
     return (
-      <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
+      <cropper-canvas
+        ref={canvasRef}
+        style={{ maxHeight: '500px', width: '100%' }}
+        background
+      >
         <cropper-image
           ref={imageRef}
           src={sampleImage}
@@ -86,7 +98,10 @@ export const WithAspectRatio: Story = {
         >
           <cropper-grid role="grid" bordered covered />
           <cropper-crosshair centered />
-          <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)" />
+          <cropper-handle
+            action="move"
+            theme-color="rgba(255, 255, 255, 0.35)"
+          />
           <cropper-handle action="n-resize" />
           <cropper-handle action="e-resize" />
           <cropper-handle action="s-resize" />
@@ -105,17 +120,23 @@ export const WithBoundsTracking: Story = {
   render: () => {
     const [bounds, setBounds] = useState<CropperBounds | null>(null);
 
-    const { canvasRef, selectionRef, imageRef, getBounds } = useCropperAdvanced({
-      autoInitialize: true,
-      onChange: () => {
-        const currentBounds = getBounds();
-        setBounds(currentBounds);
-      },
-    });
+    const { canvasRef, selectionRef, imageRef, getBounds } = useCropperAdvanced(
+      {
+        autoInitialize: true,
+        onChange: () => {
+          const currentBounds = getBounds();
+          setBounds(currentBounds);
+        },
+      }
+    );
 
     return (
       <div>
-        <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
+        <cropper-canvas
+          ref={canvasRef}
+          style={{ maxHeight: '500px', width: '100%' }}
+          background
+        >
           <cropper-image
             ref={imageRef}
             src={sampleImage}
@@ -136,7 +157,10 @@ export const WithBoundsTracking: Story = {
           >
             <cropper-grid role="grid" bordered covered />
             <cropper-crosshair centered />
-            <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)" />
+            <cropper-handle
+              action="move"
+              theme-color="rgba(255, 255, 255, 0.35)"
+            />
             <cropper-handle action="n-resize" />
             <cropper-handle action="e-resize" />
             <cropper-handle action="s-resize" />
@@ -175,19 +199,24 @@ export const WithPreview: Story = {
       });
     };
 
-    const { canvasRef, selectionRef, imageRef, getCroppedCanvas } = useCropperAdvanced({
-      autoInitialize: true,
-      onReady: () => {
-        void getCroppedCanvas().then(updatePreview);
-      },
-      onChange: () => {
-        void getCroppedCanvas().then(updatePreview);
-      },
-    });
+    const { canvasRef, selectionRef, imageRef, getCroppedCanvas } =
+      useCropperAdvanced({
+        autoInitialize: true,
+        onReady: () => {
+          void getCroppedCanvas().then(updatePreview);
+        },
+        onChange: () => {
+          void getCroppedCanvas().then(updatePreview);
+        },
+      });
 
     return (
       <div>
-        <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
+        <cropper-canvas
+          ref={canvasRef}
+          style={{ maxHeight: '500px', width: '100%' }}
+          background
+        >
           <cropper-image
             ref={imageRef}
             src={sampleImage}
@@ -208,7 +237,10 @@ export const WithPreview: Story = {
           >
             <cropper-grid role="grid" bordered covered />
             <cropper-crosshair centered />
-            <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)" />
+            <cropper-handle
+              action="move"
+              theme-color="rgba(255, 255, 255, 0.35)"
+            />
             <cropper-handle action="n-resize" />
             <cropper-handle action="e-resize" />
             <cropper-handle action="s-resize" />
@@ -242,13 +274,25 @@ export const WithPreview: Story = {
 
 export const WithControlButtons: Story = {
   render: () => {
-    const { canvasRef, selectionRef, imageRef, getBounds, setBounds, reset, clear } = useCropperAdvanced({
+    const {
+      canvasRef,
+      selectionRef,
+      imageRef,
+      getBounds,
+      setBounds,
+      reset,
+      clear,
+    } = useCropperAdvanced({
       autoInitialize: true,
     });
 
     return (
       <div>
-        <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
+        <cropper-canvas
+          ref={canvasRef}
+          style={{ maxHeight: '500px', width: '100%' }}
+          background
+        >
           <cropper-image
             ref={imageRef}
             src={sampleImage}
@@ -268,7 +312,10 @@ export const WithControlButtons: Story = {
           >
             <cropper-grid role="grid" bordered covered />
             <cropper-crosshair centered />
-            <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)" />
+            <cropper-handle
+              action="move"
+              theme-color="rgba(255, 255, 255, 0.35)"
+            />
             <cropper-handle action="n-resize" />
             <cropper-handle action="e-resize" />
             <cropper-handle action="s-resize" />
@@ -330,7 +377,11 @@ export const WithOnTransform: Story = {
 
     return (
       <div>
-        <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
+        <cropper-canvas
+          ref={canvasRef}
+          style={{ maxHeight: '500px', width: '100%' }}
+          background
+        >
           <cropper-image
             ref={imageRef}
             src={sampleImage}
@@ -350,7 +401,10 @@ export const WithOnTransform: Story = {
           >
             <cropper-grid role="grid" bordered covered />
             <cropper-crosshair centered />
-            <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)" />
+            <cropper-handle
+              action="move"
+              theme-color="rgba(255, 255, 255, 0.35)"
+            />
             <cropper-handle action="n-resize" />
             <cropper-handle action="e-resize" />
             <cropper-handle action="s-resize" />
@@ -380,8 +434,16 @@ export const MinimalSetup: Story = {
     });
 
     return (
-      <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }}>
-        <cropper-image ref={imageRef} src={sampleImage} alt="Minimal setup" crossorigin="anonymous" />
+      <cropper-canvas
+        ref={canvasRef}
+        style={{ maxHeight: '500px', width: '100%' }}
+      >
+        <cropper-image
+          ref={imageRef}
+          src={sampleImage}
+          alt="Minimal setup"
+          crossorigin="anonymous"
+        />
         <cropper-selection ref={selectionRef}>
           <cropper-grid role="grid" />
         </cropper-selection>
@@ -397,7 +459,11 @@ export const CustomHandles: Story = {
     });
 
     return (
-      <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
+      <cropper-canvas
+        ref={canvasRef}
+        style={{ maxHeight: '500px', width: '100%' }}
+        background
+      >
         <cropper-image
           ref={imageRef}
           src={sampleImage}
@@ -440,7 +506,11 @@ export const ReadOnly: Story = {
     });
 
     return (
-      <cropper-canvas ref={canvasRef} style={{ maxHeight: '500px', width: '100%' }} background>
+      <cropper-canvas
+        ref={canvasRef}
+        style={{ maxHeight: '500px', width: '100%' }}
+        background
+      >
         <cropper-image
           ref={imageRef}
           src={sampleImage}

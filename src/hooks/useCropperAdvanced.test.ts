@@ -392,7 +392,9 @@ describe('useCropper Hook', () => {
         return null;
       }
 
-      const { rerender } = render(createElement(TestComponent, { show: false }));
+      const { rerender } = render(
+        createElement(TestComponent, { show: false })
+      );
 
       // Refs are null — onChange should not be wired up yet
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -477,7 +479,9 @@ describe('useCropper Hook', () => {
 
       // Fire event on first mount — should be received
       mockSelection.dispatchEvent(new CustomEvent('change'));
-      await waitFor(() => { expect(onChange).toHaveBeenCalledTimes(1); });
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledTimes(1);
+      });
 
       // Simulate unmount (Reset)
       rerender(createElement(TestComponent, { show: false }));
@@ -497,7 +501,9 @@ describe('useCropper Hook', () => {
 
       // Fire event after remount — should fire again
       mockSelection.dispatchEvent(new CustomEvent('change'));
-      await waitFor(() => { expect(onChange).toHaveBeenCalledTimes(2); });
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledTimes(2);
+      });
     });
 
     it('should cleanup event listeners on unmount', () => {
