@@ -245,6 +245,41 @@ describe('Cropper Component', () => {
       expect(typeof ref.current.reset).toBe('function');
     });
 
+    it('should expose resetSelection method via ref', () => {
+      const ref = { current: null } as unknown as React.RefObject<CropperRef>;
+      render(<Cropper ref={ref} src="/test-image.jpg" />);
+
+      expect(ref.current.resetSelection).toBeDefined();
+      expect(typeof ref.current.resetSelection).toBe('function');
+    });
+
+    it('should expose resetTransform method via ref', () => {
+      const ref = { current: null } as unknown as React.RefObject<CropperRef>;
+      render(<Cropper ref={ref} src="/test-image.jpg" />);
+
+      expect(ref.current.resetTransform).toBeDefined();
+      expect(typeof ref.current.resetTransform).toBe('function');
+    });
+
+    it('should reset the image transform when reset is called via ref', async () => {
+      const ref = { current: null } as unknown as React.RefObject<CropperRef>;
+      render(<Cropper ref={ref} src="/test-image.jpg" />);
+
+      const image = document.querySelector('cropper-image');
+      const resetTransform = vi.spyOn(
+        image as unknown as { $resetTransform: () => void },
+        '$resetTransform'
+      );
+
+      await waitFor(() => {
+        expect(ref.current.getImage()).not.toBeNull();
+      });
+
+      ref.current.reset();
+
+      expect(resetTransform).toHaveBeenCalledTimes(1);
+    });
+
     it('should expose clear method via ref', () => {
       const ref = { current: null } as unknown as React.RefObject<CropperRef>;
       render(<Cropper ref={ref} src="/test-image.jpg" />);

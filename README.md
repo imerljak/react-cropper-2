@@ -203,13 +203,27 @@ function App() {
 ```tsx
 interface CropperRef {
   getCanvas: () => CropperCanvasElement | null;
+  getSelection: () => CropperSelectionElement | null;
+  getImage: () => CropperImageElement | null;
   getBounds: () => CropperBounds | null;
   setBounds: (bounds: Partial<CropperBounds>) => void;
   reset: () => void;
+  resetSelection: () => void;
+  resetTransform: () => void;
   clear: () => void;
   getCroppedCanvas: (options?) => Promise<HTMLCanvasElement | null>;
 }
 ```
+
+CropperJS stores the image transform (rotation, zoom, flip, translation) on
+`<cropper-image>`, separately from the selection box. The three reset methods
+target each independently:
+
+| Method             | Selection | Image transform |
+| ------------------ | --------- | --------------- |
+| `reset()`          | ✅ reset  | ✅ reset        |
+| `resetSelection()` | ✅ reset  | untouched       |
+| `resetTransform()` | untouched | ✅ reset        |
 
 ### `useCropper` Hook
 
@@ -223,6 +237,8 @@ const {
   getBounds,
   setBounds,
   reset,
+  resetSelection,
+  resetTransform,
   clear,
   getCanvas,
   getSelection,
@@ -243,6 +259,8 @@ const {
   getBounds,
   setBounds,
   reset,
+  resetSelection,
+  resetTransform,
   clear,
   getCanvas,
   getSelection,

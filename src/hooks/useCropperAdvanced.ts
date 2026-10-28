@@ -70,8 +70,12 @@ export interface UseCropperAdvancedReturn {
   getBounds: () => CropperBounds | null;
   /** Set crop bounds */
   setBounds: (bounds: Partial<CropperBounds>) => void;
-  /** Reset cropper to initial state */
+  /** Reset the cropper to its initial state: image transform and selection */
   reset: () => void;
+  /** Reset only the selection, leaving the image transform untouched */
+  resetSelection: () => void;
+  /** Reset only the image transform (rotation, zoom, flip, translation) */
+  resetTransform: () => void;
   /** Clear the selection */
   clear: () => void;
   /** Get canvas element */
@@ -179,8 +183,8 @@ export function useCropperAdvanced(
     [getBounds]
   );
 
-  // Reset cropper using $reset method
-  const reset = useCallback((): void => {
+  // Reset only the selection using $reset method
+  const resetSelection = useCallback((): void => {
     const selection = selectionRef.current;
     if (!selection) return;
 
@@ -192,6 +196,18 @@ export function useCropperAdvanced(
       setBoundsState(updatedBounds);
     }
   }, [getBounds]);
+
+  // Reset only the image transform using $resetTransform method
+  const resetTransform = useCallback((): void => {
+    imageRef.current?.$resetTransform();
+  }, []);
+
+  // CropperJS keeps the image transform on <cropper-image>, separate from the
+  // selection's $initialSelection, so a full reset has to clear both.
+  const reset = useCallback((): void => {
+    resetTransform();
+    resetSelection();
+  }, [resetTransform, resetSelection]);
 
   // Clear selection using $clear method
   const clear = useCallback((): void => {
@@ -389,6 +405,8 @@ export function useCropperAdvanced(
     getBounds,
     setBounds,
     reset,
+    resetSelection,
+    resetTransform,
     clear,
     getCanvas,
     getSelection,

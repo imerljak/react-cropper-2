@@ -297,6 +297,24 @@ describe('useCropper Hook', () => {
       expect((mockSelection as any).$reset).toHaveBeenCalledTimes(1);
     });
 
+    it('should reset the image transform as well as the selection', () => {
+      const { result } = renderHook(() => useCropperAdvanced());
+
+      Object.defineProperty(result.current.selectionRef, 'current', {
+        value: mockSelection,
+        writable: true,
+      });
+      Object.defineProperty(result.current.imageRef, 'current', {
+        value: mockImage,
+        writable: true,
+      });
+
+      result.current.reset();
+
+      expect((mockImage as any).$resetTransform).toHaveBeenCalledTimes(1);
+      expect((mockSelection as any).$reset).toHaveBeenCalledTimes(1);
+    });
+
     it('should update bounds state after reset', async () => {
       const { result } = renderHookWithRefs();
 
@@ -316,6 +334,89 @@ describe('useCropper Hook', () => {
 
       expect(() => {
         result.current.reset();
+      }).not.toThrow();
+    });
+
+    it('should reset the image even when the selection is missing', () => {
+      const { result } = renderHook(() => useCropperAdvanced());
+
+      Object.defineProperty(result.current.imageRef, 'current', {
+        value: mockImage,
+        writable: true,
+      });
+
+      result.current.reset();
+
+      expect((mockImage as any).$resetTransform).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('resetSelection', () => {
+    it('should reset the selection without touching the image transform', () => {
+      const { result } = renderHook(() => useCropperAdvanced());
+
+      Object.defineProperty(result.current.selectionRef, 'current', {
+        value: mockSelection,
+        writable: true,
+      });
+      Object.defineProperty(result.current.imageRef, 'current', {
+        value: mockImage,
+        writable: true,
+      });
+
+      result.current.resetSelection();
+
+      expect((mockSelection as any).$reset).toHaveBeenCalledTimes(1);
+      expect((mockImage as any).$resetTransform).not.toHaveBeenCalled();
+    });
+
+    it('should update bounds state after resetSelection', async () => {
+      const { result } = renderHookWithRefs();
+
+      await waitFor(() => {
+        expect(result.current.isReady).toBe(true);
+      });
+
+      act(() => {
+        result.current.resetSelection();
+      });
+
+      expect(result.current.bounds).toBeTruthy();
+    });
+
+    it('should handle null selection gracefully', () => {
+      const { result } = renderHook(() => useCropperAdvanced());
+
+      expect(() => {
+        result.current.resetSelection();
+      }).not.toThrow();
+    });
+  });
+
+  describe('resetTransform', () => {
+    it('should reset the image transform without touching the selection', () => {
+      const { result } = renderHook(() => useCropperAdvanced());
+
+      Object.defineProperty(result.current.selectionRef, 'current', {
+        value: mockSelection,
+        writable: true,
+      });
+      Object.defineProperty(result.current.imageRef, 'current', {
+        value: mockImage,
+        writable: true,
+      });
+
+      result.current.resetTransform();
+
+      expect((mockImage as any).$resetTransform).toHaveBeenCalledTimes(1);
+      expect((mockSelection as any).$reset).not.toHaveBeenCalled();
+    });
+
+    it('should handle null image gracefully', () => {
+      const { result } = renderHook(() => useCropperAdvanced());
+
+      expect(() => {
+        result.current.resetTransform();
       }).not.toThrow();
     });
   });
