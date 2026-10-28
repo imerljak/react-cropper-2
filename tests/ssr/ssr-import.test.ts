@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -14,15 +14,26 @@ import { resolve } from 'node:path';
  * is a property of what consumers actually install.
  */
 describe('SSR compatibility', () => {
-  const distDir = resolve(__dirname, '../../dist');
+  const projectRoot = resolve(__dirname, '../..');
+  const distDir = resolve(projectRoot, 'dist');
   const esmEntry = resolve(distDir, 'index.js');
   const cjsEntry = resolve(distDir, 'index.cjs');
 
+  // CI runs the test job before the build job, so the bundles this suite
+  // inspects may not exist yet. Build on demand to keep the suite
+  // self-contained rather than depending on job ordering.
+  beforeAll(() => {
+    if (existsSync(esmEntry) && existsSync(cjsEntry)) return;
+
+    execFileSync('npm', ['run', 'build'], {
+      cwd: projectRoot,
+      stdio: 'inherit',
+    });
+  }, 180_000);
+
   const requireBuild = (entry: string): void => {
     if (!existsSync(entry)) {
-      throw new Error(
-        `Missing build output: ${entry}. Run \`npm run build\` before this suite.`
-      );
+      throw new Error(`Missing build output: ${entry}.`);
     }
   };
 
