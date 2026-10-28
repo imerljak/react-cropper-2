@@ -56,15 +56,38 @@ export function CropperPreview({
   const [selector, setSelector] = useState<string | null>(null);
 
   useEffect(() => {
-    const selection = cropperRef.current?.getSelection();
-    if (!selection) return;
+    let cancelled = false;
+    let rafId: number | null = null;
 
-    // Reuse an existing id so we never clobber one the consumer set.
-    if (!selection.id) {
-      selection.id = selectionId;
-    }
+    // <cropper-viewer> reads `$image` off the source <cropper-image> when it
+    // connects, and that property only exists once the custom element has
+    // upgraded. Mounting too early throws "Cannot read properties of
+    // undefined (reading 'addEventListener')", so wait for the upgrade.
+    const attachWhenReady = (): void => {
+      if (cancelled) return;
 
-    setSelector(`#${selection.id}`);
+      const selection = cropperRef.current?.getSelection();
+      const image = cropperRef.current?.getImage();
+
+      if (!selection || !image || !('$image' in image)) {
+        rafId = requestAnimationFrame(attachWhenReady);
+        return;
+      }
+
+      // Reuse an existing id so we never clobber one the consumer set.
+      if (!selection.id) {
+        selection.id = selectionId;
+      }
+
+      setSelector(`#${selection.id}`);
+    };
+
+    attachWhenReady();
+
+    return () => {
+      cancelled = true;
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, [cropperRef, selectionId]);
 
   if (!selector) {

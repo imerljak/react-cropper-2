@@ -27,6 +27,13 @@ if (typeof window !== 'undefined') {
     class MockCropperImage extends HTMLElement {
       private laidOut = false;
 
+      /**
+       * The real element exposes the underlying <img> here once upgraded.
+       * <cropper-viewer> dereferences it on connect, so the stub has to
+       * provide it too.
+       */
+      $image = new Image();
+
       connectedCallback(): void {
         setTimeout(() => {
           this.laidOut = true;
@@ -41,6 +48,22 @@ if (typeof window !== 'undefined') {
 
       $ready(): Promise<HTMLImageElement> {
         return Promise.resolve(document.createElement('img'));
+      }
+
+      /**
+       * <cropper-viewer> clones this element and drives the clone through
+       * these methods while mirroring the source transform.
+       */
+      $getTransform(): [number, number, number, number, number, number] {
+        return [1, 0, 0, 1, 0, 0];
+      }
+
+      $setTransform(): this {
+        return this;
+      }
+
+      $setStyles(): this {
+        return this;
       }
 
       $resetTransform(): this {

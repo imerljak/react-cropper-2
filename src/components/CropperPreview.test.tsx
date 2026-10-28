@@ -180,6 +180,53 @@ describe('CropperPreview', () => {
     expect(renderSpy.mock.calls.length).toBe(rendersAfterMount);
   });
 
+  it('waits for the cropper-image to upgrade before mounting the viewer', async () => {
+    // <cropper-viewer> dereferences `$image` on the source image as it
+    // connects. Mounting before the custom element upgrades throws
+    // "Cannot read properties of undefined (reading 'addEventListener')".
+    const upgraded = { current: false };
+
+    function LateUpgradeHarness(): React.JSX.Element {
+      const cropperRef = useRef<CropperRef>(null);
+      const guardedRef = {
+        get current(): CropperRef | null {
+          const api = cropperRef.current;
+          if (!api) return null;
+
+          return {
+            ...api,
+            getImage: () => {
+              const image = api.getImage();
+              if (!image || !upgraded.current) return null;
+              return image;
+            },
+          } as CropperRef;
+        },
+      } as React.RefObject<CropperRef | null>;
+
+      return (
+        <div>
+          <Cropper ref={cropperRef} src="/test-image.jpg" />
+          <CropperPreview cropperRef={guardedRef} width={64} height={64} />
+        </div>
+      );
+    }
+
+    render(<LateUpgradeHarness />);
+
+    // Still un-upgraded: the viewer must not be mounted yet.
+    expect(document.querySelector('cropper-viewer')).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId('cropper-preview-placeholder')
+    ).toBeInTheDocument();
+
+    upgraded.current = true;
+
+    await waitFor(() => {
+      expect(document.querySelector('cropper-viewer')).toBeInTheDocument();
+    });
+  });
+
   it('applies a custom className and styles', async () => {
     function StyledHarness(): React.JSX.Element {
       const cropperRef = useRef<CropperRef>(null);
