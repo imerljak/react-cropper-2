@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.3.0](https://github.com/imerljak/react-cropper-2/compare/v0.2.1...v0.3.0) (2026-10-28)
+
+### Features
+
+* SSR safety, export helpers, circular crop, transform controls and live preview ([#101](https://github.com/imerljak/react-cropper-2/issues/101)) ([b046479](https://github.com/imerljak/react-cropper-2/commit/b0464796427927f4a61a452bdad58a88eb448f9a)), closes [#95](https://github.com/imerljak/react-cropper-2/issues/95) [#100](https://github.com/imerljak/react-cropper-2/issues/100) [#96](https://github.com/imerljak/react-cropper-2/issues/96) [#97](https://github.com/imerljak/react-cropper-2/issues/97) [#98](https://github.com/imerljak/react-cropper-2/issues/98) [#99](https://github.com/imerljak/react-cropper-2/issues/99)
+
+### Bug Fixes
+
+* gate onReady on image layout and split the reset API ([#94](https://github.com/imerljak/react-cropper-2/issues/94)) ([919f79e](https://github.com/imerljak/react-cropper-2/commit/919f79e60ec4decc9d79788d2fc84e6e23579f48))
+
 ## [0.2.1](https://github.com/imerljak/react-cropper-2/compare/v0.2.0...v0.2.1) (2026-03-04)
 
 
