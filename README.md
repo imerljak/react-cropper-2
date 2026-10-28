@@ -92,9 +92,7 @@ function App() {
   return (
     <div>
       {renderCropper({ style: { maxHeight: '500px' } })}
-      <div>
-        {bounds && <pre>{JSON.stringify(bounds, null, 2)}</pre>}
-      </div>
+      <div>{bounds && <pre>{JSON.stringify(bounds, null, 2)}</pre>}</div>
       <button onClick={reset}>Reset</button>
       <button onClick={clear}>Clear</button>
       <button onClick={handleExport}>Export</button>
@@ -148,7 +146,10 @@ function App() {
         >
           <cropper-grid role="grid" bordered covered />
           <cropper-crosshair centered />
-          <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)" />
+          <cropper-handle
+            action="move"
+            theme-color="rgba(255, 255, 255, 0.35)"
+          />
           <cropper-handle action="n-resize" />
           <cropper-handle action="e-resize" />
           <cropper-handle action="s-resize" />
@@ -159,7 +160,9 @@ function App() {
           <cropper-handle action="sw-resize" />
         </cropper-selection>
       </cropper-canvas>
-      <button onClick={() => setBounds({ x: 50, y: 50, width: 200, height: 200 })}>
+      <button
+        onClick={() => setBounds({ x: 50, y: 50, width: 200, height: 200 })}
+      >
         Set Custom Bounds
       </button>
       <button onClick={reset}>Reset</button>
@@ -174,26 +177,26 @@ function App() {
 
 #### Props
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `src` | `string` | Image URL (required) |
-| `alt` | `string` | Image alt text |
-| `crossOrigin` | `'anonymous' \| 'use-credentials'` | CORS setting |
-| `aspectRatio` | `number` | Aspect ratio constraint (e.g., 16/9) |
-| `initialCoverage` | `number` | Initial crop coverage (0-1) |
-| `background` | `boolean` | Show background (default: true) |
-| `rotatable` | `boolean` | Enable rotation (default: true) |
-| `scalable` | `boolean` | Enable scaling (default: true) |
-| `translatable` | `boolean` | Enable translation (default: true) |
-| `movable` | `boolean` | Enable moving selection (default: true) |
-| `resizable` | `boolean` | Enable resizing selection (default: true) |
-| `zoomable` | `boolean` | Enable zooming (default: true) |
-| `outlined` | `boolean` | Show selection outline (default: true) |
-| `onReady` | `(canvas: CropperCanvasElement) => void` | Callback when ready |
-| `onChange` | `CropperEventHandler` | Callback when crop changes |
-| `onCropStart` | `CropperEventHandler` | Callback when crop starts |
-| `onCropMove` | `CropperEventHandler` | Callback during crop movement |
-| `onCropEnd` | `CropperEventHandler` | Callback when crop ends |
+| Prop              | Type                                     | Description                                                                                                  |
+| ----------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `src`             | `string`                                 | Image URL (required)                                                                                         |
+| `alt`             | `string`                                 | Image alt text                                                                                               |
+| `crossOrigin`     | `'anonymous' \| 'use-credentials'`       | CORS setting                                                                                                 |
+| `aspectRatio`     | `number`                                 | Aspect ratio constraint (e.g., 16/9)                                                                         |
+| `initialCoverage` | `number`                                 | Initial crop coverage (0-1), relative to the canvas ([see note](#initialcoverage-is-relative-to-the-canvas)) |
+| `background`      | `boolean`                                | Show background (default: true)                                                                              |
+| `rotatable`       | `boolean`                                | Enable rotation (default: true)                                                                              |
+| `scalable`        | `boolean`                                | Enable scaling (default: true)                                                                               |
+| `translatable`    | `boolean`                                | Enable translation (default: true)                                                                           |
+| `movable`         | `boolean`                                | Enable moving selection (default: true)                                                                      |
+| `resizable`       | `boolean`                                | Enable resizing selection (default: true)                                                                    |
+| `zoomable`        | `boolean`                                | Enable zooming (default: true)                                                                               |
+| `outlined`        | `boolean`                                | Show selection outline (default: true)                                                                       |
+| `onReady`         | `(canvas: CropperCanvasElement) => void` | Callback when ready ([see note](#onready-and-measuring-the-image))                                           |
+| `onChange`        | `CropperEventHandler`                    | Callback when crop changes                                                                                   |
+| `onCropStart`     | `CropperEventHandler`                    | Callback when crop starts                                                                                    |
+| `onCropMove`      | `CropperEventHandler`                    | Callback during crop movement                                                                                |
+| `onCropEnd`       | `CropperEventHandler`                    | Callback when crop ends                                                                                      |
 
 #### Ref Methods
 
@@ -245,6 +248,50 @@ const {
   getSelection,
   getCroppedCanvas,
 } = useCropperAdvanced(options);
+```
+
+## Notes
+
+### `initialCoverage` is relative to the canvas
+
+`initialCoverage` sizes the selection against the **canvas**, not the image.
+The canvas letterboxes images whose aspect ratio differs from its own, so
+`initialCoverage={1}` selects the entire canvas — including the empty bars
+beside the image — not the entire image.
+
+For an 800×400 image in a 908×400 canvas, `initialCoverage={1}` yields a
+908×400 selection with 54px of empty canvas on each side.
+
+### `onReady` and measuring the image
+
+`onReady` fires once the selection has valid bounds **and** the image has a
+non-zero layout box, so every element it exposes is safe to measure
+immediately — no polling required.
+
+To open with the whole image selected, measure it in `onReady` and set the
+bounds yourself:
+
+```tsx
+const cropperRef = useRef<CropperRef>(null);
+
+<Cropper
+  ref={cropperRef}
+  src="/image.jpg"
+  onReady={(canvas) => {
+    const image = cropperRef.current?.getImage();
+    if (!image) return;
+
+    const imageBox = image.getBoundingClientRect();
+    const canvasBox = canvas.getBoundingClientRect();
+
+    cropperRef.current?.setBounds({
+      x: imageBox.x - canvasBox.x,
+      y: imageBox.y - canvasBox.y,
+      width: imageBox.width,
+      height: imageBox.height,
+    });
+  }}
+/>;
 ```
 
 ## Live Examples
@@ -315,6 +362,7 @@ react-cropper-2/
 ## Browser Support
 
 Supports all modern browsers that support:
+
 - ES2020
 - Web Components (Custom Elements)
 - ES Modules

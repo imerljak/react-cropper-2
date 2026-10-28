@@ -16,7 +16,12 @@ import type {
  * Configuration options for useCropperAdvanced hook
  */
 export interface UseCropperAdvancedOptions {
-  /** Callback when cropper is ready */
+  /**
+   * Callback when the cropper is ready.
+   *
+   * Fires once the selection has valid bounds *and* the image has a non-zero
+   * layout box, so every element exposed by the hook is safe to measure here.
+   */
   onReady?: (canvas: CropperCanvasElement) => void;
   /** Callback when crop area changes */
   onChange?: CropperEventHandler<CropperSelectionChangeEvent>;
@@ -273,11 +278,18 @@ export function useCropperAdvanced(
     const checkReady = (): void => {
       if (cancelled) return;
 
-      // Check if web component methods exist AND selection has valid bounds
+      // The selection is sized from `initialCoverage`, which is measured
+      // against the canvas — it can resolve before <cropper-image> has a
+      // layout box. Gate on the image too, so that by the time onReady fires
+      // every element it exposes is measurable.
+      const imageBox = image.getBoundingClientRect();
+
       if (
         typeof selection.$toCanvas === 'function' &&
         selection.width > 0 &&
-        selection.height > 0
+        selection.height > 0 &&
+        imageBox.width > 0 &&
+        imageBox.height > 0
       ) {
         // Web component is ready with valid selection
         setIsReady(true);

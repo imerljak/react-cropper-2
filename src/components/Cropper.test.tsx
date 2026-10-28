@@ -97,6 +97,28 @@ describe('Cropper Component', () => {
       });
     });
 
+    it('should expose a measurable image by the time onReady fires', async () => {
+      const ref = { current: null } as unknown as React.RefObject<CropperRef>;
+      let rectAtReady: DOMRect | undefined;
+
+      render(
+        <Cropper
+          ref={ref}
+          src="/test-image.jpg"
+          onReady={() => {
+            rectAtReady = ref.current.getImage()?.getBoundingClientRect();
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(rectAtReady).toBeDefined();
+      });
+
+      expect(rectAtReady?.width).toBeGreaterThan(0);
+      expect(rectAtReady?.height).toBeGreaterThan(0);
+    });
+
     it('should attach onChange listener to selection element', () => {
       const onChange = vi.fn();
       render(<Cropper src="/test-image.jpg" onChange={onChange} />);

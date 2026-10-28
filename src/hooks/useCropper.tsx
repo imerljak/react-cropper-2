@@ -27,7 +27,14 @@ export interface UseCropperOptions extends Omit<
   aspectRatio?: number;
   /** Initial aspect ratio */
   initialAspectRatio?: number;
-  /** Initial coverage (0-1) */
+  /**
+   * Initial coverage (0-1), measured against the **canvas**, not the image.
+   *
+   * The canvas letterboxes images whose aspect ratio differs from its own, so
+   * `initialCoverage: 1` selects the whole canvas — including the empty bars
+   * beside the image — rather than the whole image. To start with the image
+   * itself selected, measure it in `onReady` and set the bounds yourself.
+   */
   initialCoverage?: number;
   /** Enable background */
   background?: boolean;

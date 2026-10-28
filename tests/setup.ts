@@ -20,6 +20,36 @@ if (typeof window !== 'undefined') {
     customElements.define('cropper-canvas', MockCropperCanvas);
   }
 
+  if (!customElements.get('cropper-image')) {
+    // jsdom lays nothing out, so the box is faked. The real element only gets
+    // a box once the image source has loaded, so stay zero-sized for a tick —
+    // that pre-layout window is what the readiness probe must wait out.
+    class MockCropperImage extends HTMLElement {
+      private laidOut = false;
+
+      connectedCallback(): void {
+        setTimeout(() => {
+          this.laidOut = true;
+        }, 0);
+      }
+
+      getBoundingClientRect(): DOMRect {
+        return this.laidOut
+          ? new DOMRect(0, 0, 800, 400)
+          : new DOMRect(0, 0, 0, 0);
+      }
+
+      $ready(): Promise<HTMLImageElement> {
+        return Promise.resolve(document.createElement('img'));
+      }
+
+      $resetTransform(): this {
+        return this;
+      }
+    }
+    customElements.define('cropper-image', MockCropperImage);
+  }
+
   if (!customElements.get('cropper-selection')) {
     class MockCropperSelection extends HTMLElement {
       x = 10;
