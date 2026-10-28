@@ -21,7 +21,7 @@ A TypeScript-first React library that provides idiomatic React bindings for [Cro
 - ✅ **Circular Crops** - `shape="circle"` for avatars, masked on export
 - ✅ **Live Previews** - `<CropperPreview />` thumbnails with no React re-renders
 - ✅ **Modern Architecture** - Built on web standards
-- ✅ **Fully Tested** - 96%+ test coverage with 55 passing tests
+- ✅ **Fully Tested** - 99%+ test coverage across unit, SSR and browser suites
 - ✅ **Interactive Docs** - [Storybook documentation](https://imerljak.github.io/react-cropper-2/)
 
 ## Why react-cropper-2?
@@ -234,74 +234,31 @@ interface CropperRef {
 }
 ```
 
-CropperJS stores the image transform (rotation, zoom, flip, translation) on
-`<cropper-image>`, separately from the selection box. The three reset methods
-target each independently:
+See [Transform controls](#transform-controls) for the reset and transform
+semantics, and [Exporting](#exporting) for the export helpers.
 
-| Method             | Selection | Image transform |
-| ------------------ | --------- | --------------- |
-| `reset()`          | ✅ reset  | ✅ reset        |
-| `resetSelection()` | ✅ reset  | untouched       |
-| `resetTransform()` | untouched | ✅ reset        |
+### Hooks
 
-### `useCropper` Hook
+Both hooks return every method listed in `CropperRef` above, plus `bounds` and
+`isReady`. They differ only in who renders the markup:
 
-Simplified hook that handles rendering for you.
-
-```tsx
-const {
-  renderCropper,
-  bounds,
-  isReady,
-  getBounds,
-  setBounds,
-  reset,
-  resetSelection,
-  resetTransform,
-  rotate,
-  zoom,
-  setZoom,
-  flipHorizontal,
-  flipVertical,
-  clear,
-  getCanvas,
-  getSelection,
-  getCroppedCanvas,
-  getCroppedBlob,
-  getCroppedFile,
-  getCroppedDataURL,
-} = useCropper(options);
-```
-
-### `useCropperAdvanced` Hook
-
-Advanced hook for maximum control. You manage rendering yourself.
+| Hook                 | Returns additionally                    | You render                       |
+| -------------------- | --------------------------------------- | -------------------------------- |
+| `useCropper`         | `renderCropper()`                       | Nothing — call `renderCropper()` |
+| `useCropperAdvanced` | `canvasRef`, `selectionRef`, `imageRef` | The full element tree yourself   |
 
 ```tsx
-const {
-  canvasRef,
-  selectionRef,
-  bounds,
-  isReady,
-  getBounds,
-  setBounds,
-  reset,
-  resetSelection,
-  resetTransform,
-  rotate,
-  zoom,
-  setZoom,
-  flipHorizontal,
-  flipVertical,
-  clear,
-  getCanvas,
-  getSelection,
-  getCroppedCanvas,
-  getCroppedBlob,
-  getCroppedFile,
-  getCroppedDataURL,
-} = useCropperAdvanced(options);
+// Simplified: the hook renders for you
+const { renderCropper, bounds, reset } = useCropper({ src: '/image.jpg' });
+
+// Advanced: you attach the refs — see Advanced Usage above
+const { canvasRef, selectionRef, imageRef, bounds, reset } = useCropperAdvanced(
+  { autoInitialize: true }
+);
 ```
+
+`useCropperAdvanced` requires all three refs to be attached before it reports
+ready.
 
 ## Exporting
 
@@ -450,17 +407,6 @@ const cropperRef = useRef<CropperRef>(null);
 />;
 ```
 
-## Live Examples
-
-Check out the [interactive Storybook documentation](https://imerljak.github.io/react-cropper-2/) with live examples for:
-
-- Basic cropping
-- Different aspect ratios
-- Custom styling
-- Event handling
-- All three API approaches
-- Advanced configurations
-
 ## Development
 
 ```bash
@@ -537,10 +483,5 @@ MIT © 2025
 
 ## Acknowledgments
 
-- [CropperJS](https://github.com/fengyuanchen/cropperjs) - The underlying cropping library
-- [react-cropper](https://github.com/react-cropper/react-cropper) - Inspiration from the v1 wrapper
-
-## Related Projects
-
 - [CropperJS](https://github.com/fengyuanchen/cropperjs) - The underlying library (v2.x)
-- [react-cropper](https://github.com/react-cropper/react-cropper) - React wrapper for CropperJS v1.x
+- [react-cropper](https://github.com/react-cropper/react-cropper) - The v1 wrapper that inspired this one
