@@ -67,6 +67,17 @@ export default defineConfig({
         },
       },
       {
+        // SSR regression tests: run in real Node (no jsdom) against the built
+        // package, since that is the environment that used to crash.
+        extends: true,
+        test: {
+          name: 'ssr',
+          environment: 'node',
+          include: ['tests/ssr/**/*.test.ts'],
+          setupFiles: [],
+        },
+      },
+      {
         extends: true,
         plugins: [
           // The plugin will run tests for the stories defined in your Storybook config

@@ -1,10 +1,16 @@
+'use client';
+
 /**
  * react-cropper-2
  * A modern React wrapper for CropperJS 2.x web components
  */
 
-// Import CropperJS to register web components globally
-import 'cropperjs';
+// Register the CropperJS web components, but only in the browser. A static
+// `import 'cropperjs'` would be evaluated during SSR and throw, since the
+// library subclasses HTMLElement at module scope.
+import { registerCropperElements } from './register';
+
+void registerCropperElements();
 
 // Main component
 export { Cropper } from './components/Cropper';
@@ -21,6 +27,9 @@ export type {
   UseCropperAdvancedOptions,
   UseCropperAdvancedReturn,
 } from './hooks/useCropperAdvanced';
+
+// SSR helpers
+export { registerCropperElements, isBrowserEnvironment } from './register';
 
 // Types
 export type {

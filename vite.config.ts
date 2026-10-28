@@ -50,7 +50,15 @@ export default defineConfig(({ mode }) => {
       },
       rollupOptions: {
         external: ['react', 'react-dom', 'react/jsx-runtime', 'cropperjs'],
+        // Rollup hoists module-level directives out of bundled chunks and
+        // warns about it. The banner below re-adds 'use client' at the top of
+        // the bundle, which is where React Server Components expect it.
+        onwarn(warning, warn) {
+          if (warning.code === 'MODULE_LEVEL_DIRECTIVE') return;
+          warn(warning);
+        },
         output: {
+          banner: "'use client';",
           globals: {
             react: 'React',
             'react-dom': 'ReactDOM',
