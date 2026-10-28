@@ -16,6 +16,10 @@ void registerCropperElements();
 export { Cropper } from './components/Cropper';
 export type { CropperProps, CropperRef } from './components/Cropper';
 
+// Live preview
+export { CropperPreview } from './components/CropperPreview';
+export type { CropperPreviewProps } from './components/CropperPreview';
+
 // Hooks
 export { useCropper } from './hooks/useCropper.tsx';
 export type {
@@ -36,6 +40,8 @@ export type {
   CropperBounds,
   TransformMatrix,
   ImageSize,
+  CropperShape,
+  ExportOptions,
   CropperElement,
   CropperCanvasElement,
   CropperImageElement,

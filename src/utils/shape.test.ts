@@ -49,6 +49,29 @@ describe('resolveAspectRatio', () => {
 
     expect(warn).not.toHaveBeenCalled();
   });
+
+  it('works in browsers where process is not defined', () => {
+    // Bundlers that do not shim `process` would otherwise throw
+    // "ReferenceError: process is not defined" at render time.
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.stubGlobal('process', undefined);
+
+    expect(() => resolveAspectRatio('circle', 2)).not.toThrow();
+    expect(resolveAspectRatio('circle', 2)).toBe(1);
+
+    vi.unstubAllGlobals();
+  });
+
+  it('suppresses the warning in production builds', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.stubGlobal('process', { env: { NODE_ENV: 'production' } });
+
+    resolveAspectRatio('circle', 2);
+
+    expect(warn).not.toHaveBeenCalled();
+
+    vi.unstubAllGlobals();
+  });
 });
 
 describe('getSelectionShapeStyle', () => {
