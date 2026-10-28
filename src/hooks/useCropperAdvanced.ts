@@ -10,7 +10,14 @@ import type {
   CropperCanvasActionMoveEvent,
   CropperCanvasActionEndEvent,
   CropperImageTransformEvent,
+  CropperShape,
+  ExportOptions,
 } from '../types';
+import {
+  applyExportEffects,
+  canvasToBlob,
+  resolveEncoding,
+} from '../utils/canvas';
 
 /**
  * Configuration options for useCropperAdvanced hook
@@ -35,6 +42,13 @@ export interface UseCropperAdvancedOptions {
   onTransform?: CropperEventHandler<CropperImageTransformEvent>;
   /** Auto-initialize on mount */
   autoInitialize?: boolean;
+  /**
+   * Selection shape. `circle` masks exported images to a centred circle.
+   *
+   * This hook does not render anything, so it only affects exports; the
+   * circular outline is drawn by `<Cropper />` and `useCropper`.
+   */
+  shape?: CropperShape;
 }
 
 /**
@@ -76,6 +90,16 @@ export interface UseCropperAdvancedReturn {
   resetSelection: () => void;
   /** Reset only the image transform (rotation, zoom, flip, translation) */
   resetTransform: () => void;
+  /** Rotate the image by a relative angle, in degrees */
+  rotate: (degrees: number) => void;
+  /** Zoom by a relative ratio: positive zooms in, negative zooms out */
+  zoom: (ratio: number) => void;
+  /** Set the absolute zoom level, where 1 is the image's natural scale */
+  setZoom: (level: number) => void;
+  /** Mirror the image across the vertical axis */
+  flipHorizontal: () => void;
+  /** Mirror the image across the horizontal axis */
+  flipVertical: () => void;
   /** Clear the selection */
   clear: () => void;
   /** Get canvas element */
@@ -88,6 +112,19 @@ export interface UseCropperAdvancedReturn {
   getCroppedCanvas: (
     options?: GetCroppedCanvasOptions
   ) => Promise<HTMLCanvasElement | null>;
+  /** Get the cropped area as an encoded Blob */
+  getCroppedBlob: (
+    options?: GetCroppedCanvasOptions & ExportOptions
+  ) => Promise<Blob | null>;
+  /** Get the cropped area as a File, ready for multipart upload */
+  getCroppedFile: (
+    filename: string,
+    options?: GetCroppedCanvasOptions & ExportOptions
+  ) => Promise<File | null>;
+  /** Get the cropped area as a data URL */
+  getCroppedDataURL: (
+    options?: GetCroppedCanvasOptions & ExportOptions
+  ) => Promise<string | null>;
 }
 
 /**
@@ -115,6 +152,7 @@ export function useCropperAdvanced(
     onCropEnd,
     onTransform,
     autoInitialize = true,
+    shape = 'rect',
   } = options;
 
   const canvasRef = useRef<CropperCanvasElement>(null);
@@ -209,6 +247,55 @@ export function useCropperAdvanced(
     resetSelection();
   }, [resetTransform, resetSelection]);
 
+  // CropperJS reads a bare number as radians, so degrees are passed with an
+  // explicit unit. Without it, rotate(90) would turn the image ~5157 degrees.
+  const rotate = useCallback((degrees: number): void => {
+    imageRef.current?.$rotate(`${String(degrees)}deg`);
+  }, []);
+
+  const zoom = useCallback((ratio: number): void => {
+    imageRef.current?.$zoom(ratio);
+  }, []);
+
+  /**
+   * Reads the uniform scale currently applied to the image.
+   *
+   * Derived from the matrix as hypot(a, b) so that it stays correct while the
+   * image is rotated, where `a` alone is cos(angle) * scale rather than scale.
+   */
+  const getCurrentScale = useCallback((): number | null => {
+    const image = imageRef.current;
+    if (!image || typeof image.$getTransform !== 'function') return null;
+
+    const [a, b] = image.$getTransform();
+    const scale = Math.hypot(a, b);
+
+    return scale > 0 ? scale : null;
+  }, []);
+
+  const setZoom = useCallback(
+    (level: number): void => {
+      const image = imageRef.current;
+      if (!image || level <= 0) return;
+
+      const currentScale = getCurrentScale();
+      if (currentScale === null) return;
+
+      // $scale multiplies the existing matrix, so convert the absolute target
+      // into the relative factor that gets us there.
+      image.$scale(level / currentScale);
+    },
+    [getCurrentScale]
+  );
+
+  const flipHorizontal = useCallback((): void => {
+    imageRef.current?.$scale(-1, 1);
+  }, []);
+
+  const flipVertical = useCallback((): void => {
+    imageRef.current?.$scale(1, -1);
+  }, []);
+
   // Clear selection using $clear method
   const clear = useCallback((): void => {
     const selection = selectionRef.current;
@@ -250,6 +337,74 @@ export function useCropperAdvanced(
       return selection.$toCanvas(options);
     },
     []
+  );
+
+  /**
+   * Crops, then applies shape masking and background fill.
+   *
+   * Shared starting point for every export helper so they cannot drift apart
+   * in how they treat `shape` and `fillColor`.
+   */
+  const getProcessedCanvas = useCallback(
+    async (
+      options: GetCroppedCanvasOptions & ExportOptions = {}
+    ): Promise<HTMLCanvasElement | null> => {
+      const { mimeType, quality, fillColor, ...canvasOptions } = options;
+      void quality; // Encoding-only; not used when drawing.
+
+      const canvas = await getCroppedCanvas(canvasOptions);
+      if (!canvas) return null;
+
+      return applyExportEffects(
+        canvas,
+        { ...(mimeType && { mimeType }), ...(fillColor && { fillColor }) },
+        shape
+      );
+    },
+    [getCroppedCanvas, shape]
+  );
+
+  // Get the cropped area as an encoded Blob
+  const getCroppedBlob = useCallback(
+    async (
+      options: GetCroppedCanvasOptions & ExportOptions = {}
+    ): Promise<Blob | null> => {
+      const canvas = await getProcessedCanvas(options);
+      if (!canvas) return null;
+
+      const { mimeType, quality } = resolveEncoding(options);
+      return canvasToBlob(canvas, mimeType, quality);
+    },
+    [getProcessedCanvas]
+  );
+
+  // Get the cropped area as a File, ready for multipart upload
+  const getCroppedFile = useCallback(
+    async (
+      filename: string,
+      options: GetCroppedCanvasOptions & ExportOptions = {}
+    ): Promise<File | null> => {
+      const blob = await getCroppedBlob(options);
+      if (!blob) return null;
+
+      const { mimeType } = resolveEncoding(options);
+      return new File([blob], filename, { type: mimeType });
+    },
+    [getCroppedBlob]
+  );
+
+  // Get the cropped area as a data URL
+  const getCroppedDataURL = useCallback(
+    async (
+      options: GetCroppedCanvasOptions & ExportOptions = {}
+    ): Promise<string | null> => {
+      const canvas = await getProcessedCanvas(options);
+      if (!canvas) return null;
+
+      const { mimeType, quality } = resolveEncoding(options);
+      return canvas.toDataURL(mimeType, quality);
+    },
+    [getProcessedCanvas]
   );
 
   // Track if refs are ready
@@ -407,10 +562,18 @@ export function useCropperAdvanced(
     reset,
     resetSelection,
     resetTransform,
+    rotate,
+    zoom,
+    setZoom,
+    flipHorizontal,
+    flipVertical,
     clear,
     getCanvas,
     getSelection,
     getImage,
     getCroppedCanvas,
+    getCroppedBlob,
+    getCroppedFile,
+    getCroppedDataURL,
   };
 }

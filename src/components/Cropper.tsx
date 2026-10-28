@@ -1,4 +1,9 @@
-import { forwardRef, useImperativeHandle, type CSSProperties } from 'react';
+import {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  type CSSProperties,
+} from 'react';
 import {
   useCropperAdvanced,
   type GetCroppedCanvasOptions,
@@ -8,8 +13,10 @@ import type {
   CropperCanvasElement,
   CropperSelectionElement,
   CropperImageElement,
+  ExportOptions,
 } from '../types';
 import type { UseCropperOptions } from '../hooks/useCropper';
+import { getSelectionShapeStyle, resolveAspectRatio } from '../utils/shape';
 
 /**
  * Props for the Cropper component
@@ -41,12 +48,35 @@ export interface CropperRef {
   resetSelection: () => void;
   /** Reset only the image transform (rotation, zoom, flip, translation) */
   resetTransform: () => void;
+  /** Rotate the image by a relative angle, in degrees */
+  rotate: (degrees: number) => void;
+  /** Zoom by a relative ratio: positive zooms in, negative zooms out */
+  zoom: (ratio: number) => void;
+  /** Set the absolute zoom level, where 1 is the image's natural scale */
+  setZoom: (level: number) => void;
+  /** Mirror the image across the vertical axis */
+  flipHorizontal: () => void;
+  /** Mirror the image across the horizontal axis */
+  flipVertical: () => void;
   /** Clear the selection */
   clear: () => void;
   /** Get the cropped area as a canvas element */
   getCroppedCanvas: (
     options?: GetCroppedCanvasOptions
   ) => Promise<HTMLCanvasElement | null>;
+  /** Get the cropped area as an encoded Blob */
+  getCroppedBlob: (
+    options?: GetCroppedCanvasOptions & ExportOptions
+  ) => Promise<Blob | null>;
+  /** Get the cropped area as a File, ready for multipart upload */
+  getCroppedFile: (
+    filename: string,
+    options?: GetCroppedCanvasOptions & ExportOptions
+  ) => Promise<File | null>;
+  /** Get the cropped area as a data URL */
+  getCroppedDataURL: (
+    options?: GetCroppedCanvasOptions & ExportOptions
+  ) => Promise<string | null>;
 }
 
 /**
@@ -87,6 +117,7 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
       className,
       style,
       grid = true,
+      shape = 'rect',
       onReady,
       onChange,
       onCropStart,
@@ -107,8 +138,16 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
       reset,
       resetSelection,
       resetTransform,
+      rotate,
+      zoom,
+      setZoom,
+      flipHorizontal,
+      flipVertical,
       clear,
       getCroppedCanvas,
+      getCroppedBlob,
+      getCroppedFile,
+      getCroppedDataURL,
       getImage,
       getSelection,
     } = useCropperAdvanced({
@@ -118,8 +157,15 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
       ...(onCropMove && { onCropMove }),
       ...(onCropEnd && { onCropEnd }),
       ...(onTransform && { onTransform }),
+      shape,
       autoInitialize: true,
     });
+
+    const effectiveAspectRatio = resolveAspectRatio(shape, aspectRatio);
+    const selectionShapeStyle = useMemo(
+      () => getSelectionShapeStyle(shape),
+      [shape]
+    );
 
     // Expose methods via ref
     useImperativeHandle(
@@ -133,8 +179,16 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
         reset,
         resetSelection,
         resetTransform,
+        rotate,
+        zoom,
+        setZoom,
+        flipHorizontal,
+        flipVertical,
         clear,
         getCroppedCanvas,
+        getCroppedBlob,
+        getCroppedFile,
+        getCroppedDataURL,
       }),
       [
         getCanvas,
@@ -145,8 +199,16 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
         reset,
         resetSelection,
         resetTransform,
+        rotate,
+        zoom,
+        setZoom,
+        flipHorizontal,
+        flipVertical,
         clear,
         getCroppedCanvas,
+        getCroppedBlob,
+        getCroppedFile,
+        getCroppedDataURL,
       ]
     );
 
@@ -170,13 +232,14 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
         <cropper-selection
           ref={selectionRef}
           initial-coverage={initialCoverage}
-          aspect-ratio={aspectRatio}
+          aspect-ratio={effectiveAspectRatio}
           initial-aspect-ratio={initialAspectRatio}
           movable={movable}
           resizable={resizable}
           zoomable={zoomable}
           multiple={multiple}
           outlined={outlined}
+          style={selectionShapeStyle}
         >
           {grid && <cropper-grid role="grid" bordered covered />}
           <cropper-crosshair centered />

@@ -305,6 +305,96 @@ describe('Cropper Component', () => {
     });
   });
 
+  describe('Shape', () => {
+    it('renders a rectangular selection by default', () => {
+      render(<Cropper src="/test-image.jpg" />);
+
+      const selection = document.querySelector('cropper-selection');
+      expect(selection).not.toHaveStyle({ borderRadius: '50%' });
+    });
+
+    it('rounds the selection when shape is circle', () => {
+      render(<Cropper src="/test-image.jpg" shape="circle" />);
+
+      const selection = document.querySelector('cropper-selection');
+      expect(selection).toHaveStyle({ borderRadius: '50%' });
+    });
+
+    it('forces a 1:1 aspect ratio for circular crops', () => {
+      render(<Cropper src="/test-image.jpg" shape="circle" />);
+
+      const selection = document.querySelector('cropper-selection');
+      expect(selection).toHaveAttribute('aspect-ratio', '1');
+    });
+
+    it('overrides a conflicting aspect ratio for circular crops', () => {
+      const warn = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => undefined);
+
+      render(
+        <Cropper src="/test-image.jpg" shape="circle" aspectRatio={16 / 9} />
+      );
+
+      const selection = document.querySelector('cropper-selection');
+      expect(selection).toHaveAttribute('aspect-ratio', '1');
+      expect(warn).toHaveBeenCalled();
+
+      warn.mockRestore();
+    });
+
+    it('leaves the aspect ratio alone for rectangular crops', () => {
+      render(<Cropper src="/test-image.jpg" aspectRatio={16 / 9} />);
+
+      const selection = document.querySelector('cropper-selection');
+      expect(selection).toHaveAttribute('aspect-ratio', String(16 / 9));
+    });
+  });
+
+  describe('Export helpers', () => {
+    it.each(['getCroppedBlob', 'getCroppedFile', 'getCroppedDataURL'] as const)(
+      'exposes %s via ref',
+      (method) => {
+        const ref = { current: null } as unknown as React.RefObject<CropperRef>;
+        render(<Cropper ref={ref} src="/test-image.jpg" />);
+
+        expect(typeof ref.current[method]).toBe('function');
+      }
+    );
+  });
+
+  describe('Transform controls', () => {
+    it.each([
+      'rotate',
+      'zoom',
+      'setZoom',
+      'flipHorizontal',
+      'flipVertical',
+    ] as const)('exposes %s via ref', (method) => {
+      const ref = { current: null } as unknown as React.RefObject<CropperRef>;
+      render(<Cropper ref={ref} src="/test-image.jpg" />);
+
+      expect(typeof ref.current[method]).toBe('function');
+    });
+
+    it('rotates the image in degrees, not radians', async () => {
+      const ref = { current: null } as unknown as React.RefObject<CropperRef>;
+      render(<Cropper ref={ref} src="/test-image.jpg" />);
+
+      await waitFor(() => {
+        expect(ref.current.getImage()).not.toBeNull();
+      });
+
+      const image = ref.current.getImage();
+      const rotateSpy = vi.fn();
+      Object.assign(image as object, { $rotate: rotateSpy });
+
+      ref.current.rotate(90);
+
+      expect(rotateSpy).toHaveBeenCalledWith('90deg');
+    });
+  });
+
   describe('Edge Cases', () => {
     it('should handle missing alt text gracefully', () => {
       render(<Cropper src="/test-image.jpg" />);

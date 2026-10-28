@@ -43,6 +43,26 @@ export interface CropperCanvasElement extends CropperElement, HTMLElement {
 export type TransformMatrix = [number, number, number, number, number, number];
 export type ImageSize = 'contain' | 'cover';
 
+/** Selection shape. `circle` masks exports to a centred circle. */
+export type CropperShape = 'rect' | 'circle';
+
+/**
+ * Encoding options for the export helpers.
+ */
+export interface ExportOptions {
+  /** Output format. Defaults to `image/png`. */
+  mimeType?: 'image/png' | 'image/jpeg' | 'image/webp';
+  /** Encoder quality for lossy formats, 0-1. Defaults to 0.92. */
+  quality?: number;
+  /**
+   * Background painted behind the crop.
+   *
+   * Applied automatically for JPEG, which has no alpha channel and would
+   * otherwise render transparent pixels black.
+   */
+  fillColor?: string;
+}
+
 /**
  * Cropper image element
  */

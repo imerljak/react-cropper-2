@@ -15,8 +15,16 @@ vi.mock('./useCropperAdvanced', () => ({
     reset: vi.fn(),
     resetSelection: vi.fn(),
     resetTransform: vi.fn(),
+    rotate: vi.fn(),
+    zoom: vi.fn(),
+    setZoom: vi.fn(),
+    flipHorizontal: vi.fn(),
+    flipVertical: vi.fn(),
     clear: vi.fn(),
     getCroppedCanvas: vi.fn(() => Promise.resolve(null)),
+    getCroppedBlob: vi.fn(() => Promise.resolve(null)),
+    getCroppedFile: vi.fn(() => Promise.resolve(null)),
+    getCroppedDataURL: vi.fn(() => Promise.resolve(null)),
     getCanvas: vi.fn(() => null),
     getSelection: vi.fn(() => null),
     getImage: vi.fn(() => null),
@@ -55,6 +63,27 @@ describe('useCropper', () => {
     expect(result.current.resetSelection).toBeDefined();
     expect(result.current.resetTransform).toBeDefined();
     expect(result.current.clear).toBeDefined();
+  });
+
+  it('should expose transform controls and export helpers', () => {
+    const { result } = renderHook(() =>
+      useCropper({
+        src: '/test.jpg',
+      })
+    );
+
+    for (const method of [
+      'rotate',
+      'zoom',
+      'setZoom',
+      'flipHorizontal',
+      'flipVertical',
+      'getCroppedBlob',
+      'getCroppedFile',
+      'getCroppedDataURL',
+    ] as const) {
+      expect(typeof result.current[method]).toBe('function');
+    }
   });
 
   it('should apply default options', () => {
