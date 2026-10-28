@@ -13,6 +13,8 @@ vi.mock('./useCropperAdvanced', () => ({
     getBounds: vi.fn(() => null),
     setBounds: vi.fn(),
     reset: vi.fn(),
+    resetSelection: vi.fn(),
+    resetTransform: vi.fn(),
     clear: vi.fn(),
     getCroppedCanvas: vi.fn(() => Promise.resolve(null)),
     getCanvas: vi.fn(() => null),
@@ -50,6 +52,8 @@ describe('useCropper', () => {
     expect(result.current.getBounds).toBeDefined();
     expect(result.current.setBounds).toBeDefined();
     expect(result.current.reset).toBeDefined();
+    expect(result.current.resetSelection).toBeDefined();
+    expect(result.current.resetTransform).toBeDefined();
     expect(result.current.clear).toBeDefined();
   });
 

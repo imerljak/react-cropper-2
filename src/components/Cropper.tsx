@@ -35,8 +35,12 @@ export interface CropperRef {
   getBounds: () => CropperBounds | null;
   /** Set crop bounds */
   setBounds: (bounds: Partial<CropperBounds>) => void;
-  /** Reset cropper to initial state */
+  /** Reset the cropper to its initial state: image transform and selection */
   reset: () => void;
+  /** Reset only the selection, leaving the image transform untouched */
+  resetSelection: () => void;
+  /** Reset only the image transform (rotation, zoom, flip, translation) */
+  resetTransform: () => void;
   /** Clear the selection */
   clear: () => void;
   /** Get the cropped area as a canvas element */
@@ -101,6 +105,8 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
       getBounds,
       setBounds,
       reset,
+      resetSelection,
+      resetTransform,
       clear,
       getCroppedCanvas,
       getImage,
@@ -125,6 +131,8 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
         getBounds,
         setBounds,
         reset,
+        resetSelection,
+        resetTransform,
         clear,
         getCroppedCanvas,
       }),
@@ -135,6 +143,8 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
         getBounds,
         setBounds,
         reset,
+        resetSelection,
+        resetTransform,
         clear,
         getCroppedCanvas,
       ]

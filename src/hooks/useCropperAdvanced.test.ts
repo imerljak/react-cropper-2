@@ -16,11 +16,15 @@ describe('useCropper Hook', () => {
   // Mock elements
   let mockCanvas: HTMLElement;
   let mockSelection: HTMLElement;
+  let mockImage: HTMLElement;
+  /** Layout box reported by mockImage — zero until the image "loads". */
+  let imageRect: { width: number; height: number };
 
   beforeEach(() => {
     // Create mock elements
     mockCanvas = document.createElement('div');
     mockSelection = document.createElement('div');
+    mockImage = document.createElement('div');
 
     // Add mock properties and methods to selection matching CropperJS 2.x API
     Object.assign(mockSelection, {
@@ -44,8 +48,20 @@ describe('useCropper Hook', () => {
       $toCanvas: vi.fn().mockResolvedValue(document.createElement('canvas')),
     });
 
+    // jsdom lays nothing out, so drive the image box explicitly. Starts
+    // laid out; tests that care about the pre-layout window reset it to 0.
+    imageRect = { width: 800, height: 400 };
+    Object.assign(mockImage, {
+      $resetTransform: vi.fn(),
+      $center: vi.fn(),
+      $ready: vi.fn().mockResolvedValue(document.createElement('img')),
+      getBoundingClientRect: () =>
+        new DOMRect(0, 0, imageRect.width, imageRect.height),
+    });
+
     document.body.appendChild(mockCanvas);
     document.body.appendChild(mockSelection);
+    document.body.appendChild(mockImage);
   });
 
   // Helper to properly test hooks with refs attached
@@ -77,7 +93,7 @@ describe('useCropper Hook', () => {
       }
       if (hook.imageRef.current === null) {
         Object.defineProperty(hook.imageRef, 'current', {
-          value: mockSelection,
+          value: mockImage,
           writable: true,
           configurable: true,
         });
@@ -138,6 +154,56 @@ describe('useCropper Hook', () => {
       await waitFor(() => {
         expect(result.current.isReady).toBe(true);
       });
+    });
+
+    it('should not report ready while the image has a zero-sized box', async () => {
+      imageRect = { width: 0, height: 0 };
+      const onReady = vi.fn();
+      const { result } = renderHookWithRefs({ onReady });
+
+      // Give the rAF probe several frames to (incorrectly) settle.
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(result.current.isReady).toBe(false);
+      expect(onReady).not.toHaveBeenCalled();
+    });
+
+    it('should report ready once the image has been laid out', async () => {
+      imageRect = { width: 0, height: 0 };
+      const onReady = vi.fn();
+      const { result } = renderHookWithRefs({ onReady });
+
+      expect(result.current.isReady).toBe(false);
+
+      // Simulate the image resolving its layout box on a later frame.
+      imageRect = { width: 800, height: 400 };
+
+      await waitFor(() => {
+        expect(result.current.isReady).toBe(true);
+      });
+      expect(onReady).toHaveBeenCalledTimes(1);
+    });
+
+    it('should hand onReady an image that is measurable', async () => {
+      imageRect = { width: 0, height: 0 };
+      let rectAtReady: DOMRect | undefined;
+
+      const { result } = renderHookWithRefs({
+        // Snapshot the image box at the exact moment onReady fires — this is
+        // what a consumer measuring the image on open would observe.
+        onReady: () => {
+          rectAtReady = mockImage.getBoundingClientRect();
+        },
+      });
+
+      imageRect = { width: 800, height: 400 };
+
+      await waitFor(() => {
+        expect(result.current.isReady).toBe(true);
+      });
+
+      expect(rectAtReady?.width).toBeGreaterThan(0);
+      expect(rectAtReady?.height).toBeGreaterThan(0);
     });
   });
 
@@ -231,6 +297,24 @@ describe('useCropper Hook', () => {
       expect((mockSelection as any).$reset).toHaveBeenCalledTimes(1);
     });
 
+    it('should reset the image transform as well as the selection', () => {
+      const { result } = renderHook(() => useCropperAdvanced());
+
+      Object.defineProperty(result.current.selectionRef, 'current', {
+        value: mockSelection,
+        writable: true,
+      });
+      Object.defineProperty(result.current.imageRef, 'current', {
+        value: mockImage,
+        writable: true,
+      });
+
+      result.current.reset();
+
+      expect((mockImage as any).$resetTransform).toHaveBeenCalledTimes(1);
+      expect((mockSelection as any).$reset).toHaveBeenCalledTimes(1);
+    });
+
     it('should update bounds state after reset', async () => {
       const { result } = renderHookWithRefs();
 
@@ -250,6 +334,89 @@ describe('useCropper Hook', () => {
 
       expect(() => {
         result.current.reset();
+      }).not.toThrow();
+    });
+
+    it('should reset the image even when the selection is missing', () => {
+      const { result } = renderHook(() => useCropperAdvanced());
+
+      Object.defineProperty(result.current.imageRef, 'current', {
+        value: mockImage,
+        writable: true,
+      });
+
+      result.current.reset();
+
+      expect((mockImage as any).$resetTransform).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('resetSelection', () => {
+    it('should reset the selection without touching the image transform', () => {
+      const { result } = renderHook(() => useCropperAdvanced());
+
+      Object.defineProperty(result.current.selectionRef, 'current', {
+        value: mockSelection,
+        writable: true,
+      });
+      Object.defineProperty(result.current.imageRef, 'current', {
+        value: mockImage,
+        writable: true,
+      });
+
+      result.current.resetSelection();
+
+      expect((mockSelection as any).$reset).toHaveBeenCalledTimes(1);
+      expect((mockImage as any).$resetTransform).not.toHaveBeenCalled();
+    });
+
+    it('should update bounds state after resetSelection', async () => {
+      const { result } = renderHookWithRefs();
+
+      await waitFor(() => {
+        expect(result.current.isReady).toBe(true);
+      });
+
+      act(() => {
+        result.current.resetSelection();
+      });
+
+      expect(result.current.bounds).toBeTruthy();
+    });
+
+    it('should handle null selection gracefully', () => {
+      const { result } = renderHook(() => useCropperAdvanced());
+
+      expect(() => {
+        result.current.resetSelection();
+      }).not.toThrow();
+    });
+  });
+
+  describe('resetTransform', () => {
+    it('should reset the image transform without touching the selection', () => {
+      const { result } = renderHook(() => useCropperAdvanced());
+
+      Object.defineProperty(result.current.selectionRef, 'current', {
+        value: mockSelection,
+        writable: true,
+      });
+      Object.defineProperty(result.current.imageRef, 'current', {
+        value: mockImage,
+        writable: true,
+      });
+
+      result.current.resetTransform();
+
+      expect((mockImage as any).$resetTransform).toHaveBeenCalledTimes(1);
+      expect((mockSelection as any).$reset).not.toHaveBeenCalled();
+    });
+
+    it('should handle null image gracefully', () => {
+      const { result } = renderHook(() => useCropperAdvanced());
+
+      expect(() => {
+        result.current.resetTransform();
       }).not.toThrow();
     });
   });
@@ -350,7 +517,7 @@ describe('useCropper Hook', () => {
       });
 
       const event = new CustomEvent('transform');
-      mockSelection.dispatchEvent(event);
+      mockImage.dispatchEvent(event);
 
       await waitFor(() => {
         expect(onTransform).toHaveBeenCalledTimes(1);
@@ -378,7 +545,7 @@ describe('useCropper Hook', () => {
             configurable: true,
           });
           Object.defineProperty(hook.imageRef, 'current', {
-            value: mockSelection,
+            value: mockImage,
             writable: true,
             configurable: true,
           });
@@ -443,7 +610,7 @@ describe('useCropper Hook', () => {
           }
           if (hook.imageRef.current === null) {
             Object.defineProperty(hook.imageRef, 'current', {
-              value: mockSelection,
+              value: mockImage,
               writable: true,
               configurable: true,
             });
@@ -560,12 +727,12 @@ describe('useCropper Hook', () => {
       const { result } = renderHook(() => useCropperAdvanced());
 
       Object.defineProperty(result.current.imageRef, 'current', {
-        value: mockSelection,
+        value: mockImage,
         writable: true,
       });
 
       const image = result.current.getImage();
-      expect(image).toBe(mockSelection);
+      expect(image).toBe(mockImage);
     });
 
     it('should return null when elements not set', () => {

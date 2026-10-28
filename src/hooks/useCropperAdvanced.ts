@@ -16,7 +16,12 @@ import type {
  * Configuration options for useCropperAdvanced hook
  */
 export interface UseCropperAdvancedOptions {
-  /** Callback when cropper is ready */
+  /**
+   * Callback when the cropper is ready.
+   *
+   * Fires once the selection has valid bounds *and* the image has a non-zero
+   * layout box, so every element exposed by the hook is safe to measure here.
+   */
   onReady?: (canvas: CropperCanvasElement) => void;
   /** Callback when crop area changes */
   onChange?: CropperEventHandler<CropperSelectionChangeEvent>;
@@ -65,8 +70,12 @@ export interface UseCropperAdvancedReturn {
   getBounds: () => CropperBounds | null;
   /** Set crop bounds */
   setBounds: (bounds: Partial<CropperBounds>) => void;
-  /** Reset cropper to initial state */
+  /** Reset the cropper to its initial state: image transform and selection */
   reset: () => void;
+  /** Reset only the selection, leaving the image transform untouched */
+  resetSelection: () => void;
+  /** Reset only the image transform (rotation, zoom, flip, translation) */
+  resetTransform: () => void;
   /** Clear the selection */
   clear: () => void;
   /** Get canvas element */
@@ -174,8 +183,8 @@ export function useCropperAdvanced(
     [getBounds]
   );
 
-  // Reset cropper using $reset method
-  const reset = useCallback((): void => {
+  // Reset only the selection using $reset method
+  const resetSelection = useCallback((): void => {
     const selection = selectionRef.current;
     if (!selection) return;
 
@@ -187,6 +196,18 @@ export function useCropperAdvanced(
       setBoundsState(updatedBounds);
     }
   }, [getBounds]);
+
+  // Reset only the image transform using $resetTransform method
+  const resetTransform = useCallback((): void => {
+    imageRef.current?.$resetTransform();
+  }, []);
+
+  // CropperJS keeps the image transform on <cropper-image>, separate from the
+  // selection's $initialSelection, so a full reset has to clear both.
+  const reset = useCallback((): void => {
+    resetTransform();
+    resetSelection();
+  }, [resetTransform, resetSelection]);
 
   // Clear selection using $clear method
   const clear = useCallback((): void => {
@@ -273,11 +294,18 @@ export function useCropperAdvanced(
     const checkReady = (): void => {
       if (cancelled) return;
 
-      // Check if web component methods exist AND selection has valid bounds
+      // The selection is sized from `initialCoverage`, which is measured
+      // against the canvas — it can resolve before <cropper-image> has a
+      // layout box. Gate on the image too, so that by the time onReady fires
+      // every element it exposes is measurable.
+      const imageBox = image.getBoundingClientRect();
+
       if (
         typeof selection.$toCanvas === 'function' &&
         selection.width > 0 &&
-        selection.height > 0
+        selection.height > 0 &&
+        imageBox.width > 0 &&
+        imageBox.height > 0
       ) {
         // Web component is ready with valid selection
         setIsReady(true);
@@ -377,6 +405,8 @@ export function useCropperAdvanced(
     getBounds,
     setBounds,
     reset,
+    resetSelection,
+    resetTransform,
     clear,
     getCanvas,
     getSelection,
