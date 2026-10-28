@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 import { useRef, useState } from 'react';
 import { Cropper, type CropperRef } from '../components/Cropper';
+import { CropperPreview } from '../components/CropperPreview';
 import type { CropperBounds, TransformMatrix } from '../types';
 
 const meta = {
@@ -407,6 +408,150 @@ export const WithOnTransform: Story = {
   args: {
     src: sampleImage,
     alt: 'Sample image — rotate or zoom to see transform',
+    crossOrigin: 'anonymous',
+    style: { maxHeight: '500px', width: '100%' },
+  },
+};
+
+export const CircularAvatar: Story = {
+  render: (args) => {
+    const cropperRef = useRef<CropperRef>(null);
+    const [dataUrl, setDataUrl] = useState<string>('');
+
+    return (
+      <div>
+        <Cropper {...args} ref={cropperRef} shape="circle" />
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+          <button
+            onClick={() => {
+              void cropperRef.current
+                ?.getCroppedDataURL({ mimeType: 'image/png' })
+                .then((url) => {
+                  setDataUrl(url ?? '');
+                });
+            }}
+          >
+            Export PNG
+          </button>
+        </div>
+        {dataUrl && (
+          <img
+            src={dataUrl}
+            alt="Circular crop result"
+            style={{ marginTop: '1rem', width: 128, height: 128 }}
+          />
+        )}
+      </div>
+    );
+  },
+  args: {
+    src: sampleImage,
+    alt: 'Sample image — circular avatar crop',
+    crossOrigin: 'anonymous',
+    style: { maxHeight: '500px', width: '100%' },
+  },
+};
+
+export const TransformControls: Story = {
+  render: (args) => {
+    const cropperRef = useRef<CropperRef>(null);
+
+    return (
+      <div>
+        <Cropper {...args} ref={cropperRef} />
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '0.5rem',
+            marginTop: '1rem',
+          }}
+        >
+          <button
+            onClick={() => {
+              cropperRef.current?.rotate(-90);
+            }}
+          >
+            Rotate -90°
+          </button>
+          <button
+            onClick={() => {
+              cropperRef.current?.rotate(90);
+            }}
+          >
+            Rotate +90°
+          </button>
+          <button
+            onClick={() => {
+              cropperRef.current?.zoom(0.1);
+            }}
+          >
+            Zoom in
+          </button>
+          <button
+            onClick={() => {
+              cropperRef.current?.zoom(-0.1);
+            }}
+          >
+            Zoom out
+          </button>
+          <button
+            onClick={() => {
+              cropperRef.current?.flipHorizontal();
+            }}
+          >
+            Flip H
+          </button>
+          <button
+            onClick={() => {
+              cropperRef.current?.flipVertical();
+            }}
+          >
+            Flip V
+          </button>
+          <button
+            onClick={() => {
+              cropperRef.current?.reset();
+            }}
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+    );
+  },
+  args: {
+    src: sampleImage,
+    alt: 'Sample image — external transform controls',
+    crossOrigin: 'anonymous',
+    style: { maxHeight: '500px', width: '100%' },
+  },
+};
+
+export const LivePreviews: Story = {
+  render: (args) => {
+    const cropperRef = useRef<CropperRef>(null);
+
+    return (
+      <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+        <div style={{ flex: 1 }}>
+          <Cropper {...args} ref={cropperRef} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <CropperPreview cropperRef={cropperRef} width={128} height={128} />
+          <CropperPreview
+            cropperRef={cropperRef}
+            width={48}
+            height={48}
+            shape="circle"
+          />
+        </div>
+      </div>
+    );
+  },
+  args: {
+    src: sampleImage,
+    alt: 'Sample image — live synchronised previews',
     crossOrigin: 'anonymous',
     style: { maxHeight: '500px', width: '100%' },
   },

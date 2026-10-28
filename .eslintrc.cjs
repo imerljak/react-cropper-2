@@ -68,6 +68,12 @@ module.exports = {
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-unsafe-assignment': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
+        // Test doubles are object literals standing in for DOM APIs, so the
+        // strict `this` and nullability rules add noise without adding safety.
+        '@typescript-eslint/unbound-method': 'off',
+        '@typescript-eslint/no-unsafe-call': 'off',
+        '@typescript-eslint/no-confusing-void-expression': 'off',
+        '@typescript-eslint/non-nullable-type-assertion-style': 'off',
       },
     },
   ],

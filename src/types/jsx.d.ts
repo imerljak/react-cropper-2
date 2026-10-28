@@ -108,6 +108,9 @@ declare module 'react' {
           selection?: string | undefined;
           /** How the viewer resizes to match the selection aspect ratio. */
           resize?: 'both' | 'horizontal' | 'vertical' | 'none' | undefined;
+          class?: string | undefined;
+          style?: CSSProperties | undefined;
+          ref?: React.Ref<HTMLElement> | undefined;
           shadowRootMode?: 'closed' | 'open' | undefined;
           slottable?: boolean | undefined;
           themeColor?: string | undefined;
