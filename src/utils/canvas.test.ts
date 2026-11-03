@@ -166,11 +166,27 @@ describe('applyExportEffects', () => {
     expect(context.clip).toHaveBeenCalled();
   });
 
-  it('does not auto-fill a circular jpeg, which would repaint the corners', () => {
+  it('fills a white background behind a circular jpeg, which has no alpha channel', () => {
     const context = stubContext();
     withStubbedContext(context);
 
     applyExportEffects(stubCanvas(), { mimeType: 'image/jpeg' }, 'circle');
+
+    // The mask runs, and the corners get filled in behind the image instead of
+    // turning black when the alpha channel is dropped.
+    expect(context.clip).toHaveBeenCalled();
+    expect(context.fillStyle).toBe('#fff');
+    expect(context.fillRect).toHaveBeenCalled();
+    const clipOrder = vi.mocked(context.clip).mock.invocationCallOrder[0];
+    const fillOrder = vi.mocked(context.fillRect).mock.invocationCallOrder[0];
+    expect(clipOrder).toBeLessThan(fillOrder as number);
+  });
+
+  it('keeps a circular png transparent, with no default fill', () => {
+    const context = stubContext();
+    withStubbedContext(context);
+
+    applyExportEffects(stubCanvas(), { mimeType: 'image/png' }, 'circle');
 
     expect(context.clip).toHaveBeenCalled();
     expect(context.fillRect).not.toHaveBeenCalled();

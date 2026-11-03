@@ -89,10 +89,11 @@ export function applyExportEffects(
 
   let result = shape === 'circle' ? maskToCircle(source) : source;
 
-  // Only fill when asked, or when the format would turn transparency black.
+  // Fill whenever asked, or whenever the format would turn transparency black:
+  // an opaque background goes behind the image, so it cannot repaint the
+  // corners a circular mask just cleared — it only fills them in.
   const needsOpaqueBackground = OPAQUE_MIME_TYPES.has(mimeType);
-  const background =
-    fillColor ?? (needsOpaqueBackground && shape === 'rect' ? '#fff' : null);
+  const background = fillColor ?? (needsOpaqueBackground ? '#fff' : null);
 
   if (background) {
     result = withBackground(result, background);
