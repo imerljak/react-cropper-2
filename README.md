@@ -330,12 +330,22 @@ const cropperRef = useRef<CropperRef>(null);
 <CropperPreview cropperRef={cropperRef} width={48} height={48} shape="circle" />
 ```
 
-| Prop                  | Type                    | Description                             |
-| --------------------- | ----------------------- | --------------------------------------- |
-| `cropperRef`          | `RefObject<CropperRef>` | Ref of the cropper to mirror (required) |
-| `width` / `height`    | `number`                | Thumbnail size in pixels (required)     |
-| `shape`               | `'rect' \| 'circle'`    | Thumbnail shape. Default: `'rect'`      |
-| `className` / `style` | —                       | Custom styling                          |
+With `resize="none"` the crop is scaled to the box's width, so a box whose
+aspect ratio differs from the selection clips or letterboxes it. For a
+free-ratio selection, omit `height` and the preview takes the crop's shape:
+
+```tsx
+<CropperPreview cropperRef={cropperRef} width={160} />
+```
+
+| Prop                  | Type                                             | Description                                                                                 |
+| --------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `cropperRef`          | `RefObject<CropperRef>`                          | Ref of the cropper to mirror (required)                                                     |
+| `width`               | `number`                                         | Thumbnail width in pixels (required)                                                        |
+| `height`              | `number`                                         | Thumbnail height in pixels. Omit to follow the crop's aspect ratio (circles stay square)    |
+| `resize`              | `'both' \| 'horizontal' \| 'vertical' \| 'none'` | How the viewer follows the selection. Default: `'vertical'` without `height`, else `'none'` |
+| `shape`               | `'rect' \| 'circle'`                             | Thumbnail shape. Default: `'rect'`                                                          |
+| `className` / `style` | —                                                | Custom styling                                                                              |
 
 ## Server-side rendering
 

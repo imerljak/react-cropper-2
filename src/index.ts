@@ -18,7 +18,10 @@ export type { CropperProps, CropperRef } from './components/Cropper';
 
 // Live preview
 export { CropperPreview } from './components/CropperPreview';
-export type { CropperPreviewProps } from './components/CropperPreview';
+export type {
+  CropperPreviewProps,
+  CropperPreviewResize,
+} from './components/CropperPreview';
 
 // Hooks
 export { useCropper } from './hooks/useCropper.tsx';

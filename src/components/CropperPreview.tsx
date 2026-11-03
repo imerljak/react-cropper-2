@@ -3,6 +3,9 @@ import type { CropperRef } from './Cropper';
 import type { CropperShape } from '../types';
 import { getSelectionShapeStyle } from '../utils/shape';
 
+/** Resize modes supported by `<cropper-viewer>` */
+export type CropperPreviewResize = 'both' | 'horizontal' | 'vertical' | 'none';
+
 /**
  * Props for the CropperPreview component
  */
@@ -11,10 +14,21 @@ export interface CropperPreviewProps {
   cropperRef: React.RefObject<CropperRef | null>;
   /** Preview width in pixels */
   width: number;
-  /** Preview height in pixels */
-  height: number;
+  /**
+   * Preview height in pixels. When omitted, the height follows the crop's
+   * aspect ratio (`resize="vertical"`), except for `shape="circle"`, which
+   * stays square.
+   */
+  height?: number;
   /** Preview shape. `circle` rounds the thumbnail. Defaults to `rect`. */
   shape?: CropperShape;
+  /**
+   * How the viewer follows the selection's shape. Defaults to `'vertical'`
+   * when `height` is omitted and to `'none'` otherwise. With `'none'`, the
+   * crop is scaled to the box's width, so the box should match the
+   * selection's aspect ratio or the crop is clipped or letterboxed.
+   */
+  resize?: CropperPreviewResize;
   /** Custom class name */
   className?: string;
   /** Custom styles */
@@ -36,6 +50,8 @@ export interface CropperPreviewProps {
  * <Cropper ref={cropperRef} src="/avatar.jpg" shape="circle" />
  * <CropperPreview cropperRef={cropperRef} width={128} height={128} />
  * <CropperPreview cropperRef={cropperRef} width={48} height={48} shape="circle" />
+ * // Free-ratio selection: height follows the crop
+ * <CropperPreview cropperRef={cropperRef} width={160} />
  * ```
  */
 export function CropperPreview({
@@ -43,6 +59,7 @@ export function CropperPreview({
   width,
   height,
   shape = 'rect',
+  resize,
   className,
   style,
 }: CropperPreviewProps): React.JSX.Element {
@@ -54,6 +71,10 @@ export function CropperPreview({
   // The ref is null on first render, so resolving the selection has to wait
   // for the effect. Holding it in state re-renders once the id is attached.
   const [selector, setSelector] = useState<string | null>(null);
+
+  const followsCrop = height === undefined && shape !== 'circle';
+  const boxHeight = followsCrop ? undefined : (height ?? width);
+  const resizeMode = resize ?? (followsCrop ? 'vertical' : 'none');
 
   useEffect(() => {
     let cancelled = false;
@@ -95,7 +116,12 @@ export function CropperPreview({
     return (
       <div
         className={className}
-        style={{ width, height, ...getSelectionShapeStyle(shape), ...style }}
+        style={{
+          width,
+          height: boxHeight ?? width,
+          ...getSelectionShapeStyle(shape),
+          ...style,
+        }}
         data-testid="cropper-preview-placeholder"
       />
     );
@@ -104,11 +130,11 @@ export function CropperPreview({
   return (
     <cropper-viewer
       selection={selector}
-      resize="none"
+      resize={resizeMode}
       class={className}
       style={{
         width,
-        height,
+        height: boxHeight,
         overflow: 'hidden',
         ...getSelectionShapeStyle(shape),
         ...style,

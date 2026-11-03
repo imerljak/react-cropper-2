@@ -254,4 +254,65 @@ describe('CropperPreview', () => {
     expect(viewer).toHaveClass('thumb');
     expect(viewer).toHaveStyle({ outlineWidth: '2px' });
   });
+
+  describe('resize', () => {
+    async function renderPreview(
+      props: Partial<React.ComponentProps<typeof CropperPreview>>
+    ): Promise<Element> {
+      function ResizeHarness(): React.JSX.Element {
+        const cropperRef = useRef<CropperRef>(null);
+        return (
+          <div>
+            <Cropper ref={cropperRef} src="/test-image.jpg" />
+            <CropperPreview cropperRef={cropperRef} width={160} {...props} />
+          </div>
+        );
+      }
+
+      render(<ResizeHarness />);
+
+      await waitFor(() => {
+        expect(document.querySelector('cropper-viewer')).toBeInTheDocument();
+      });
+
+      return document.querySelector('cropper-viewer') as Element;
+    }
+
+    it('keeps resize="none" when width and height are both given', async () => {
+      const viewer = await renderPreview({ height: 128 });
+
+      expect(viewer).toHaveAttribute('resize', 'none');
+      expect(viewer).toHaveStyle({ width: '160px', height: '128px' });
+    });
+
+    it('lets the height follow the crop when height is omitted', async () => {
+      const viewer = await renderPreview({});
+
+      expect(viewer).toHaveAttribute('resize', 'vertical');
+      expect((viewer as HTMLElement).style.height).toBe('');
+      expect(viewer).toHaveStyle({ width: '160px' });
+    });
+
+    it('passes an explicit resize mode through', async () => {
+      const viewer = await renderPreview({ height: 128, resize: 'both' });
+
+      expect(viewer).toHaveAttribute('resize', 'both');
+    });
+
+    it('keeps a circle square when height is omitted', async () => {
+      const viewer = await renderPreview({ shape: 'circle' });
+
+      expect(viewer).toHaveAttribute('resize', 'none');
+      expect(viewer).toHaveStyle({ width: '160px', height: '160px' });
+    });
+
+    it('reserves a square placeholder when height is omitted', () => {
+      render(<CropperPreview cropperRef={createRef()} width={64} />);
+
+      expect(screen.getByTestId('cropper-preview-placeholder')).toHaveStyle({
+        width: '64px',
+        height: '64px',
+      });
+    });
+  });
 });
