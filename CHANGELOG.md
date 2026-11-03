@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.3.1](https://github.com/imerljak/react-cropper-2/compare/v0.3.0...v0.3.1) (2026-11-03)
+
+### Bug Fixes
+
+* **preview:** let the preview follow the crop shape ([#102](https://github.com/imerljak/react-cropper-2/issues/102)) ([de65dc7](https://github.com/imerljak/react-cropper-2/commit/de65dc7ca875b2ac5b2956bf2f288cc730db27a3))
+
 ## [0.3.0](https://github.com/imerljak/react-cropper-2/compare/v0.2.1...v0.3.0) (2026-10-28)
 
 ### Features
