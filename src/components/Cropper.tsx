@@ -16,7 +16,13 @@ import type {
   ExportOptions,
 } from '../types';
 import type { UseCropperOptions } from '../hooks/useCropper';
-import { getSelectionShapeStyle, resolveAspectRatio } from '../utils/shape';
+import { useResolvedShape } from '../hooks/useResolvedShape';
+import {
+  getSelectionShapeStyle,
+  isPathShape,
+  resolveAspectRatio,
+} from '../utils/shape';
+import { ShapeOverlay } from './ShapeOverlay';
 
 /**
  * Props for the Cropper component
@@ -113,10 +119,10 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
       resizable = true,
       zoomable = true,
       multiple = false,
-      outlined = true,
+      outlined,
       className,
       style,
-      grid = true,
+      grid,
       shape = 'rect',
       onReady,
       onChange,
@@ -127,6 +133,8 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
     },
     ref
   ) => {
+    const resolvedShape = useResolvedShape(shape);
+
     // Use the advanced hook for all functionality
     const {
       canvasRef,
@@ -157,15 +165,22 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
       ...(onCropMove && { onCropMove }),
       ...(onCropEnd && { onCropEnd }),
       ...(onTransform && { onTransform }),
-      shape,
+      shape: resolvedShape,
       autoInitialize: true,
     });
 
-    const effectiveAspectRatio = resolveAspectRatio(shape, aspectRatio);
-    const selectionShapeStyle = useMemo(
-      () => getSelectionShapeStyle(shape),
-      [shape]
+    const effectiveAspectRatio = useMemo(
+      () => resolveAspectRatio(resolvedShape, aspectRatio),
+      [resolvedShape, aspectRatio]
     );
+    const selectionShapeStyle = useMemo(
+      () => getSelectionShapeStyle(resolvedShape),
+      [resolvedShape]
+    );
+    // The rectangular outline and grid clash with a custom outline, so they
+    // default off for custom shapes. Explicit props still win.
+    const showOutline = outlined ?? !isPathShape(resolvedShape);
+    const showGrid = grid ?? !isPathShape(resolvedShape);
 
     // Expose methods via ref
     useImperativeHandle(
@@ -238,10 +253,11 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
           resizable={resizable}
           zoomable={zoomable}
           multiple={multiple}
-          outlined={outlined}
+          outlined={showOutline}
           style={selectionShapeStyle}
         >
-          {grid && <cropper-grid role="grid" bordered covered />}
+          {showGrid && <cropper-grid role="grid" bordered covered />}
+          {isPathShape(resolvedShape) && <ShapeOverlay shape={resolvedShape} />}
           <cropper-crosshair centered />
           <cropper-handle
             action="move"

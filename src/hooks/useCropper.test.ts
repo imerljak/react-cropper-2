@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { render, renderHook, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCropper } from './useCropper.tsx';
 
@@ -200,6 +200,59 @@ describe('useCropper', () => {
 
     const element = result.current.renderCropper();
     expect(element).toBeDefined();
+  });
+
+  describe('custom shape', () => {
+    const diamond = {
+      path: 'M 50 0 L 100 50 L 50 100 L 0 50 Z',
+      viewBox: [0, 0, 100, 50] as [number, number, number, number],
+    };
+
+    it('draws the overlay and drops the rectangular outline and grid', () => {
+      const { result } = renderHook(() =>
+        useCropper({ src: '/test.jpg', shape: diamond })
+      );
+
+      render(result.current.renderCropper());
+
+      const overlay = screen.getByTestId('cropper-shape-overlay');
+      expect(overlay.parentElement?.tagName).toBe('CROPPER-SELECTION');
+      expect(overlay).toHaveAttribute('viewBox', '0 0 100 50');
+      const selection = document.querySelector('cropper-selection');
+      expect(selection).not.toHaveAttribute('outlined');
+      expect(selection).toHaveAttribute('aspect-ratio', '2');
+      expect(document.querySelector('cropper-grid')).not.toBeInTheDocument();
+    });
+
+    it('lets explicit outlined and grid options win', () => {
+      const { result } = renderHook(() =>
+        useCropper({
+          src: '/test.jpg',
+          shape: diamond,
+          outlined: true,
+          grid: true,
+        })
+      );
+
+      render(result.current.renderCropper());
+
+      expect(document.querySelector('cropper-selection')).toHaveAttribute(
+        'outlined'
+      );
+      expect(document.querySelector('cropper-grid')).toBeInTheDocument();
+    });
+  });
+
+  it('keeps the outline and grid on by default for rectangles', () => {
+    const { result } = renderHook(() => useCropper({ src: '/test.jpg' }));
+
+    render(result.current.renderCropper());
+
+    expect(document.querySelector('cropper-selection')).toHaveAttribute(
+      'outlined'
+    );
+    expect(document.querySelector('cropper-grid')).toBeInTheDocument();
+    expect(screen.queryByTestId('cropper-shape-overlay')).toBeNull();
   });
 
   it('should default alt to empty string', () => {

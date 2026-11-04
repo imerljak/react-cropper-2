@@ -18,6 +18,7 @@ import {
   canvasToBlob,
   resolveEncoding,
 } from '../utils/canvas';
+import { useResolvedShape } from './useResolvedShape';
 
 /**
  * Configuration options for useCropperAdvanced hook
@@ -43,10 +44,11 @@ export interface UseCropperAdvancedOptions {
   /** Auto-initialize on mount */
   autoInitialize?: boolean;
   /**
-   * Selection shape. `circle` masks exported images to a centred circle.
+   * Selection shape. `circle` masks exported images to a centred circle, and
+   * a custom shape masks them to its path.
    *
    * This hook does not render anything, so it only affects exports; the
-   * circular outline is drawn by `<Cropper />` and `useCropper`.
+   * outline is drawn by `<Cropper />` and `useCropper`.
    */
   shape?: CropperShape;
 }
@@ -154,6 +156,8 @@ export function useCropperAdvanced(
     autoInitialize = true,
     shape = 'rect',
   } = options;
+
+  const resolvedShape = useResolvedShape(shape);
 
   const canvasRef = useRef<CropperCanvasElement>(null);
   const selectionRef = useRef<CropperSelectionElement>(null);
@@ -358,10 +362,10 @@ export function useCropperAdvanced(
       return applyExportEffects(
         canvas,
         { ...(mimeType && { mimeType }), ...(fillColor && { fillColor }) },
-        shape
+        resolvedShape
       );
     },
-    [getCroppedCanvas, shape]
+    [getCroppedCanvas, resolvedShape]
   );
 
   // Get the cropped area as an encoded Blob

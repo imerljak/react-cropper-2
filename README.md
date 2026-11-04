@@ -19,6 +19,7 @@ A TypeScript-first React library that provides idiomatic React bindings for [Cro
 - ✅ **Three APIs** - Component, simplified hook, and advanced hook
 - ✅ **Export Helpers** - Blob, File and data URL in one call
 - ✅ **Circular Crops** - `shape="circle"` for avatars, masked on export
+- ✅ **Custom Shapes** - Any SVG path as the crop shape, on screen and on export
 - ✅ **Live Previews** - `<CropperPreview />` thumbnails with no React re-renders
 - ✅ **Modern Architecture** - Built on web standards
 - ✅ **Fully Tested** - 99%+ test coverage across unit, SSR and browser suites
@@ -188,7 +189,7 @@ function App() {
 | `crossOrigin`     | `'anonymous' \| 'use-credentials'`       | CORS setting                                                                                                 |
 | `aspectRatio`     | `number`                                 | Aspect ratio constraint (e.g., 16/9)                                                                         |
 | `initialCoverage` | `number`                                 | Initial crop coverage (0-1), relative to the canvas ([see note](#initialcoverage-is-relative-to-the-canvas)) |
-| `shape`           | `'rect' \| 'circle'`                     | Selection shape ([see note](#circular-crops)). Default: `'rect'`                                             |
+| `shape`           | `CropperShape`                           | `'rect'`, `'circle'` ([note](#circular-crops)) or a [custom shape](#custom-shapes). Default: `'rect'`        |
 | `background`      | `boolean`                                | Show background (default: true)                                                                              |
 | `rotatable`       | `boolean`                                | Enable rotation (default: true)                                                                              |
 | `scalable`        | `boolean`                                | Enable scaling (default: true)                                                                               |
@@ -196,7 +197,8 @@ function App() {
 | `movable`         | `boolean`                                | Enable moving selection (default: true)                                                                      |
 | `resizable`       | `boolean`                                | Enable resizing selection (default: true)                                                                    |
 | `zoomable`        | `boolean`                                | Enable zooming (default: true)                                                                               |
-| `outlined`        | `boolean`                                | Show selection outline (default: true)                                                                       |
+| `outlined`        | `boolean`                                | Show the rectangular selection outline (default: true, false for custom shapes)                              |
+| `grid`            | `boolean`                                | Show the selection grid (default: true, false for custom shapes)                                             |
 | `onReady`         | `(canvas: CropperCanvasElement) => void` | Callback when ready ([see note](#onready-and-measuring-the-image))                                           |
 | `onChange`        | `CropperEventHandler`                    | Callback when crop changes                                                                                   |
 | `onCropStart`     | `CropperEventHandler`                    | Callback when crop starts                                                                                    |
@@ -344,7 +346,7 @@ free-ratio selection, omit `height` and the preview takes the crop's shape:
 | `width`               | `number`                                         | Thumbnail width in pixels (required)                                                        |
 | `height`              | `number`                                         | Thumbnail height in pixels. Omit to follow the crop's aspect ratio (circles stay square)    |
 | `resize`              | `'both' \| 'horizontal' \| 'vertical' \| 'none'` | How the viewer follows the selection. Default: `'vertical'` without `height`, else `'none'` |
-| `shape`               | `'rect' \| 'circle'`                             | Thumbnail shape. Default: `'rect'`                                                          |
+| `shape`               | `CropperShape`                                   | Thumbnail shape, including [custom shapes](#custom-shapes). Default: `'rect'`               |
 | `className` / `style` | —                                                | Custom styling                                                                              |
 
 ## Server-side rendering
@@ -375,6 +377,65 @@ channel, so its corners are filled with `fillColor` (white by default).
 It also **forces `aspectRatio={1}`**. A circular selection over a non-square box
 would not match the exported image, so a conflicting `aspectRatio` is overridden
 and a warning is logged in development.
+
+### Custom shapes
+
+Pass a `CropperShapeDefinition` to crop to any SVG path. The same geometry
+draws the outline over the selection and masks the export, so what you see is
+what you get.
+
+```tsx
+import {
+  Cropper,
+  polygonShape,
+  type CropperShapeDefinition,
+} from '@imerljak/react-cropper-2';
+
+// Paste a path straight from an SVG file, with its viewBox.
+const star: CropperShapeDefinition = {
+  path: 'M 0 -11 L 3.1 -4.3 L 10.5 -3.4 L 5 1.7 L 6.5 9 L 0 5.4 L -6.5 9 L -5 1.7 L -10.5 -3.4 L -3.1 -4.3 Z',
+  viewBox: '-12 -12 24 24',
+};
+
+// Or build a polygon from points in the 0–1 unit square.
+const hexagon = polygonShape([
+  [0.25, 0],
+  [0.75, 0],
+  [1, 0.5],
+  [0.75, 1],
+  [0.25, 1],
+  [0, 0.5],
+]);
+
+<Cropper src="/photo.jpg" shape={star} />;
+```
+
+| Field     | Type                                    | Description                                                   |
+| --------- | --------------------------------------- | ------------------------------------------------------------- |
+| `path`    | `string`                                | SVG path data in `viewBox` units, curves included (required)  |
+| `viewBox` | `[minX, minY, width, height] \| string` | Coordinate space of `path`, e.g. `'-12 -12 24 24'` (required) |
+| `stretch` | `boolean`                               | Let the shape stretch with the selection. Default: `false`    |
+
+- **Aspect ratio:** the selection is locked to the `viewBox` ratio so the shape
+  is never distorted. A conflicting `aspectRatio` is ignored with a development
+  warning. Set `stretch: true` to free the ratio and let the shape stretch.
+- **Export:** the output keeps the selection's rectangular size. Pixels outside
+  the shape are transparent in PNG/WebP and filled with `fillColor` (white by
+  default) in JPEG. Space between the path and the `viewBox` edges is part of
+  the export.
+- **Outline:** drawn as an SVG over the selection. The rectangular `outlined`
+  border and the `grid` are off by default for custom shapes. Pass them
+  explicitly to turn them back on. Resize handles stay on the rectangle, and
+  dragging anywhere inside it moves the selection. Change the outline colour
+  with the `--react-cropper-2-shape-stroke` CSS custom property.
+- **Validation:** a path that does not start with `M`, or a `viewBox` without a
+  positive width and height, falls back to `'rect'` with a development warning
+  instead of exporting an empty image.
+- **Previews:** `<CropperPreview shape={star} />` clips the thumbnail to the
+  same shape. `useCropperAdvanced` renders nothing, so there `shape` only masks
+  exports.
+
+Shapes are compared by value, so defining them inline is fine.
 
 ### `initialCoverage` is relative to the canvas
 

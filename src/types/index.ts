@@ -43,8 +43,31 @@ export interface CropperCanvasElement extends CropperElement, HTMLElement {
 export type TransformMatrix = [number, number, number, number, number, number];
 export type ImageSize = 'contain' | 'cover';
 
-/** Selection shape. `circle` masks exports to a centred circle. */
-export type CropperShape = 'rect' | 'circle';
+/**
+ * A custom crop shape, described once and used for both the on-screen outline
+ * and the export mask so the two cannot drift apart.
+ */
+export interface CropperShapeDefinition {
+  /** SVG path data, in `viewBox` units. Must start with a moveto (`M`/`m`). */
+  path: string;
+  /**
+   * Coordinate space of `path`, as `[minX, minY, width, height]` or the SVG
+   * attribute string (`"-12 -12 24 24"`). Required: the path cannot be mapped
+   * onto the selection without it.
+   */
+  viewBox: [number, number, number, number] | string;
+  /**
+   * Let the shape stretch with the selection. By default the selection is
+   * locked to the `viewBox` aspect ratio so the shape is never distorted.
+   */
+  stretch?: boolean;
+}
+
+/**
+ * Selection shape. `circle` masks exports to a centred circle; a
+ * {@link CropperShapeDefinition} masks them to a custom path.
+ */
+export type CropperShape = 'rect' | 'circle' | CropperShapeDefinition;
 
 /**
  * Encoding options for the export helpers.

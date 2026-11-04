@@ -35,6 +35,9 @@ export type {
   UseCropperAdvancedReturn,
 } from './hooks/useCropperAdvanced';
 
+// Shape helpers
+export { polygonShape } from './utils/shape';
+
 // SSR helpers
 export { registerCropperElements, isBrowserEnvironment } from './register';
 
@@ -44,6 +47,7 @@ export type {
   TransformMatrix,
   ImageSize,
   CropperShape,
+  CropperShapeDefinition,
   ExportOptions,
   CropperElement,
   CropperCanvasElement,

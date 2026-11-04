@@ -1,11 +1,18 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   applyExportEffects,
   canvasToBlob,
   maskToCircle,
+  maskToPath,
   resolveEncoding,
   withBackground,
 } from './canvas';
+import type { ResolvedPathShape } from './shape';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 /**
  * jsdom has no real 2D rasteriser, so these tests assert on the drawing
@@ -28,9 +35,31 @@ function stubContext(): CanvasRenderingContext2D {
     clip: vi.fn(),
     drawImage: vi.fn(),
     fillRect: vi.fn(),
+    scale: vi.fn(),
+    translate: vi.fn(),
+    setTransform: vi.fn(),
     fillStyle: '',
   } as unknown as CanvasRenderingContext2D;
 }
+
+/** jsdom has no Path2D; record the path data it was built from. */
+class StubPath2D {
+  constructor(readonly data: string) {}
+}
+
+function stubPath2D(): void {
+  vi.stubGlobal('Path2D', StubPath2D);
+}
+
+function order(mock: unknown): number {
+  return vi.mocked(mock as () => void).mock.invocationCallOrder[0] as number;
+}
+
+const triangle: ResolvedPathShape = {
+  path: 'M 0.5 0 L 1 1 L 0 1 Z',
+  viewBox: [0, 0, 1, 1],
+  stretch: false,
+};
 
 /** Points freshly created canvases at a recording context. */
 function withStubbedContext(context: CanvasRenderingContext2D): void {
@@ -115,7 +144,110 @@ describe('maskToCircle', () => {
   });
 });
 
+describe('maskToPath', () => {
+  it('maps the viewBox onto the canvas: scale per axis, then shift the origin', () => {
+    const context = stubContext();
+    withStubbedContext(context);
+    stubPath2D();
+
+    maskToPath(stubCanvas(300, 150), {
+      ...triangle,
+      viewBox: [-12, -6, 24, 12],
+    });
+
+    expect(context.scale).toHaveBeenCalledWith(12.5, 12.5);
+    expect(context.translate).toHaveBeenCalledWith(12, 6);
+    // Transforms compose last-first, so scale must be issued before translate
+    // for points to be shifted to the origin and then scaled.
+    expect(order(context.scale)).toBeLessThan(order(context.translate));
+  });
+
+  it('follows the output size, not the on-screen selection size', () => {
+    const context = stubContext();
+    withStubbedContext(context);
+    stubPath2D();
+
+    // Exporting at a size different from the viewBox aspect still fills it.
+    maskToPath(stubCanvas(400, 100), triangle);
+
+    expect(context.scale).toHaveBeenCalledWith(400, 100);
+  });
+
+  it('clips to the shape path', () => {
+    const context = stubContext();
+    withStubbedContext(context);
+    stubPath2D();
+
+    maskToPath(stubCanvas(), triangle);
+
+    const [path] = vi.mocked(context.clip).mock.calls[0] as unknown as [
+      StubPath2D,
+    ];
+    expect(path).toBeInstanceOf(StubPath2D);
+    expect(path.data).toBe(triangle.path);
+  });
+
+  it('draws the image in canvas pixels after clipping', () => {
+    const context = stubContext();
+    withStubbedContext(context);
+    stubPath2D();
+
+    maskToPath(stubCanvas(), triangle);
+
+    // The clip survives setTransform; the image must not be drawn scaled.
+    expect(context.setTransform).toHaveBeenCalledWith(1, 0, 0, 1, 0, 0);
+    expect(order(context.clip)).toBeLessThan(order(context.setTransform));
+    expect(order(context.setTransform)).toBeLessThan(order(context.drawImage));
+    expect(context.drawImage).toHaveBeenCalledWith(
+      expect.any(HTMLCanvasElement),
+      0,
+      0
+    );
+  });
+
+  it('leaves no transform or clip on the context afterwards', () => {
+    const context = stubContext();
+    withStubbedContext(context);
+    stubPath2D();
+
+    maskToPath(stubCanvas(), triangle);
+
+    expect(order(context.save)).toBeLessThan(order(context.scale));
+    expect(order(context.drawImage)).toBeLessThan(order(context.restore));
+  });
+
+  it('returns the source unchanged when no context is available', () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+    const source = stubCanvas();
+
+    expect(maskToPath(source, triangle)).toBe(source);
+  });
+});
+
 describe('applyExportEffects', () => {
+  it('masks to the path for a custom shape', () => {
+    const context = stubContext();
+    withStubbedContext(context);
+    stubPath2D();
+
+    applyExportEffects(stubCanvas(), { mimeType: 'image/png' }, triangle);
+
+    expect(context.clip).toHaveBeenCalled();
+    expect(context.arc).not.toHaveBeenCalled();
+    expect(context.fillRect).not.toHaveBeenCalled();
+  });
+
+  it('fills behind a custom shape for jpeg, after the mask', () => {
+    const context = stubContext();
+    withStubbedContext(context);
+    stubPath2D();
+
+    applyExportEffects(stubCanvas(), { mimeType: 'image/jpeg' }, triangle);
+
+    expect(context.fillStyle).toBe('#fff');
+    expect(order(context.clip)).toBeLessThan(order(context.fillRect));
+  });
+
   it('leaves a plain png crop untouched', () => {
     const source = stubCanvas();
 

@@ -3,7 +3,12 @@ import { expect, userEvent, within } from 'storybook/test';
 import { useRef, useState } from 'react';
 import { Cropper, type CropperRef } from '../components/Cropper';
 import { CropperPreview } from '../components/CropperPreview';
-import type { CropperBounds, TransformMatrix } from '../types';
+import { polygonShape } from '../utils/shape';
+import type {
+  CropperBounds,
+  CropperShapeDefinition,
+  TransformMatrix,
+} from '../types';
 
 const meta = {
   title: 'Components/Cropper',
@@ -449,6 +454,97 @@ export const CircularAvatar: Story = {
     alt: 'Sample image — circular avatar crop',
     crossOrigin: 'anonymous',
     style: { maxHeight: '500px', width: '100%' },
+  },
+};
+
+/** Five-point star from a 24-unit icon grid, centred on the origin. */
+const star: CropperShapeDefinition = {
+  path: 'M 0 -11 L 3.1 -4.3 L 10.5 -3.4 L 5 1.7 L 6.5 9 L 0 5.4 L -6.5 9 L -5 1.7 L -10.5 -3.4 L -3.1 -4.3 Z',
+  viewBox: '-12 -12 24 24',
+};
+
+const hexagon = polygonShape([
+  [0.25, 0],
+  [0.75, 0],
+  [1, 0.5],
+  [0.75, 1],
+  [0.25, 1],
+  [0, 0.5],
+]);
+
+export const CustomShape: Story = {
+  render: (args) => {
+    const cropperRef = useRef<CropperRef>(null);
+    const [shape, setShape] = useState<CropperShapeDefinition>(star);
+    const [dataUrl, setDataUrl] = useState<string>('');
+
+    return (
+      <div>
+        <Cropper {...args} ref={cropperRef} shape={shape} />
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+          <button
+            onClick={() => {
+              setShape(star);
+            }}
+          >
+            Star
+          </button>
+          <button
+            onClick={() => {
+              setShape(hexagon);
+            }}
+          >
+            Hexagon
+          </button>
+          <button
+            onClick={() => {
+              void cropperRef.current
+                ?.getCroppedDataURL({ mimeType: 'image/png' })
+                .then((url) => {
+                  setDataUrl(url ?? '');
+                });
+            }}
+          >
+            Export PNG
+          </button>
+          <CropperPreview
+            cropperRef={cropperRef}
+            width={64}
+            height={64}
+            shape={shape}
+          />
+        </div>
+        {dataUrl && (
+          <img
+            src={dataUrl}
+            alt="Custom shape crop result"
+            style={{ marginTop: '1rem', width: 128, height: 128 }}
+          />
+        )}
+      </div>
+    );
+  },
+  args: {
+    src: sampleImage,
+    alt: 'Sample image — custom shape crop',
+    crossOrigin: 'anonymous',
+    style: { maxHeight: '500px', width: '100%' },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    const selection = canvasElement.querySelector('cropper-selection');
+    const overlay = canvasElement.querySelector(
+      '[data-testid="cropper-shape-overlay"]'
+    );
+
+    await expect(overlay?.parentElement).toBe(selection);
+    await expect(overlay).toHaveAttribute('viewBox', '-12 -12 24 24');
+    await expect(selection).not.toHaveAttribute('outlined');
+
+    await userEvent.click(canvas.getByText('Hexagon'));
+    await expect(overlay).toHaveAttribute('viewBox', '0 0 1 1');
   },
 };
 

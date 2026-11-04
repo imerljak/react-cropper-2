@@ -218,6 +218,57 @@ describe('export helpers', () => {
 
       expect(context.arc).not.toHaveBeenCalled();
     });
+
+    it('masks exports to a custom path, mapped onto the export size', async () => {
+      const context = {
+        save: vi.fn(),
+        restore: vi.fn(),
+        scale: vi.fn(),
+        translate: vi.fn(),
+        setTransform: vi.fn(),
+        clip: vi.fn(),
+        drawImage: vi.fn(),
+        fillRect: vi.fn(),
+        fillStyle: '',
+      };
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
+        context as unknown as RenderingContext
+      );
+      vi.stubGlobal(
+        'Path2D',
+        class {
+          constructor(readonly data: string) {}
+        }
+      );
+
+      const cropper = renderWithSelection({
+        shape: { path: 'M 0 0 L 60 0 L 0 60 Z', viewBox: '0 0 60 60' },
+      });
+      await cropper.getCroppedBlob();
+
+      // The stubbed crop is 120×120, so viewBox units scale by 2.
+      expect(context.scale).toHaveBeenCalledWith(2, 2);
+      expect(context.clip).toHaveBeenCalledWith(
+        expect.objectContaining({ data: 'M 0 0 L 60 0 L 0 60 Z' })
+      );
+
+      vi.unstubAllGlobals();
+    });
+
+    it('does not mask exports for an invalid custom shape', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const context = { clip: vi.fn(), fillRect: vi.fn(), drawImage: vi.fn() };
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
+        context as unknown as RenderingContext
+      );
+
+      const cropper = renderWithSelection({
+        shape: { path: 'not a path', viewBox: '0 0 1 1' },
+      });
+
+      await expect(cropper.getCroppedBlob()).resolves.toBeInstanceOf(Blob);
+      expect(context.clip).not.toHaveBeenCalled();
+    });
   });
 
   describe('getCroppedCanvas', () => {
