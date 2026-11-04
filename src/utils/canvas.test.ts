@@ -166,11 +166,24 @@ describe('applyExportEffects', () => {
     expect(context.clip).toHaveBeenCalled();
   });
 
-  it('does not auto-fill a circular jpeg, which would repaint the corners', () => {
+  it('fills the corners of a circular jpeg so they do not turn black', () => {
     const context = stubContext();
     withStubbedContext(context);
 
     applyExportEffects(stubCanvas(), { mimeType: 'image/jpeg' }, 'circle');
+
+    expect(context.fillStyle).toBe('#fff');
+    // The fill goes behind the masked circle, so it has to come after the clip.
+    const clipOrder = vi.mocked(context.clip).mock.invocationCallOrder[0];
+    const fillOrder = vi.mocked(context.fillRect).mock.invocationCallOrder[0];
+    expect(clipOrder).toBeLessThan(fillOrder as number);
+  });
+
+  it('keeps the corners of a circular png transparent', () => {
+    const context = stubContext();
+    withStubbedContext(context);
+
+    applyExportEffects(stubCanvas(), { mimeType: 'image/png' }, 'circle');
 
     expect(context.clip).toHaveBeenCalled();
     expect(context.fillRect).not.toHaveBeenCalled();

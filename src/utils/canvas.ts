@@ -77,8 +77,9 @@ export function maskToCircle(source: HTMLCanvasElement): HTMLCanvasElement {
 /**
  * Applies shape and background post-processing to a freshly cropped canvas.
  *
- * Order matters: the circular mask runs first so the background fill cannot
- * repaint the corners the mask just cleared.
+ * Order matters: the mask runs first, then the fill is painted behind the
+ * masked image. That keeps the shape intact while still giving opaque formats
+ * a background for the cleared corners.
  */
 export function applyExportEffects(
   source: HTMLCanvasElement,
@@ -91,8 +92,7 @@ export function applyExportEffects(
 
   // Only fill when asked, or when the format would turn transparency black.
   const needsOpaqueBackground = OPAQUE_MIME_TYPES.has(mimeType);
-  const background =
-    fillColor ?? (needsOpaqueBackground && shape === 'rect' ? '#fff' : null);
+  const background = fillColor ?? (needsOpaqueBackground ? '#fff' : null);
 
   if (background) {
     result = withBackground(result, background);
