@@ -369,7 +369,8 @@ Both are exported if you need to trigger or check registration yourself.
 
 `shape="circle"` rounds the selection on screen and masks exports to a centred
 circle via a canvas clip. Pixels outside the circle stay transparent, so use
-`image/png` or `image/webp` to preserve the round edge — JPEG will fill them.
+`image/png` or `image/webp` to preserve the round edge. JPEG has no alpha
+channel, so its corners are filled with `fillColor` (white by default).
 
 It also **forces `aspectRatio={1}`**. A circular selection over a non-square box
 would not match the exported image, so a conflicting `aspectRatio` is overridden
