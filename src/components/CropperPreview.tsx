@@ -1,7 +1,12 @@
 import { useEffect, useId, useState, type CSSProperties } from 'react';
 import type { CropperRef } from './Cropper';
 import type { CropperShape } from '../types';
-import { getSelectionShapeStyle } from '../utils/shape';
+import { useResolvedShape } from '../hooks/useResolvedShape';
+import {
+  getSelectionShapeStyle,
+  isPathShape,
+  type ResolvedPathShape,
+} from '../utils/shape';
 
 /** Resize modes supported by `<cropper-viewer>` */
 export type CropperPreviewResize = 'both' | 'horizontal' | 'vertical' | 'none';
@@ -20,7 +25,10 @@ export interface CropperPreviewProps {
    * stays square.
    */
   height?: number;
-  /** Preview shape. `circle` rounds the thumbnail. Defaults to `rect`. */
+  /**
+   * Preview shape. `circle` rounds the thumbnail and a custom shape clips it
+   * to its path. Defaults to `rect`.
+   */
   shape?: CropperShape;
   /**
    * How the viewer follows the selection's shape. Defaults to `'vertical'`
@@ -72,9 +80,19 @@ export function CropperPreview({
   // for the effect. Holding it in state re-renders once the id is attached.
   const [selector, setSelector] = useState<string | null>(null);
 
-  const followsCrop = height === undefined && shape !== 'circle';
+  const resolvedShape = useResolvedShape(shape);
+  const clipPathId = `react-cropper-2-shape-${generatedId}`;
+  const shapeStyle: CSSProperties | undefined = isPathShape(resolvedShape)
+    ? { clipPath: `url(#${clipPathId})` }
+    : getSelectionShapeStyle(resolvedShape);
+
+  const followsCrop = height === undefined && resolvedShape !== 'circle';
   const boxHeight = followsCrop ? undefined : (height ?? width);
   const resizeMode = resize ?? (followsCrop ? 'vertical' : 'none');
+
+  const clipPathDefinition = isPathShape(resolvedShape) && (
+    <ShapeClipPath id={clipPathId} shape={resolvedShape} />
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -114,32 +132,71 @@ export function CropperPreview({
   if (!selector) {
     // Reserve the layout box so mounting the viewer does not shift content.
     return (
-      <div
-        className={className}
-        style={{
-          width,
-          height: boxHeight ?? width,
-          ...getSelectionShapeStyle(shape),
-          ...style,
-        }}
-        data-testid="cropper-preview-placeholder"
-      />
+      <>
+        {clipPathDefinition}
+        <div
+          className={className}
+          style={{
+            width,
+            height: boxHeight ?? width,
+            ...shapeStyle,
+            ...style,
+          }}
+          data-testid="cropper-preview-placeholder"
+        />
+      </>
     );
   }
 
   return (
-    <cropper-viewer
-      selection={selector}
-      resize={resizeMode}
-      class={className}
-      style={{
-        width,
-        height: boxHeight,
-        overflow: 'hidden',
-        ...getSelectionShapeStyle(shape),
-        ...style,
-      }}
-    />
+    <>
+      {clipPathDefinition}
+      <cropper-viewer
+        selection={selector}
+        resize={resizeMode}
+        class={className}
+        style={{
+          width,
+          height: boxHeight,
+          overflow: 'hidden',
+          ...shapeStyle,
+          ...style,
+        }}
+      />
+    </>
+  );
+}
+
+/**
+ * Clip path that scales with whatever element references it.
+ *
+ * CSS `clip-path: path()` takes pixels and would not follow the thumbnail's
+ * size. `objectBoundingBox` units span 0–1 of the clipped element, so the
+ * viewBox is mapped onto that unit square instead.
+ */
+function ShapeClipPath({
+  id,
+  shape,
+}: {
+  id: string;
+  shape: ResolvedPathShape;
+}): React.JSX.Element {
+  const [minX, minY, width, height] = shape.viewBox;
+
+  return (
+    <svg
+      aria-hidden="true"
+      width="0"
+      height="0"
+      style={{ position: 'absolute' }}
+    >
+      <clipPath id={id} clipPathUnits="objectBoundingBox">
+        <path
+          d={shape.path}
+          transform={`scale(${String(1 / width)} ${String(1 / height)}) translate(${String(-minX)} ${String(-minY)})`}
+        />
+      </clipPath>
+    </svg>
   );
 }
 

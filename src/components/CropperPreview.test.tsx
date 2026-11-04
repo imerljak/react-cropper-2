@@ -4,6 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { createRef, useRef } from 'react';
 import { Cropper, type CropperRef } from './Cropper';
 import { CropperPreview } from './CropperPreview';
+import type { CropperShapeDefinition } from '../types';
 
 /** Renders a cropper with previews wired to its ref. */
 function Harness({
@@ -253,6 +254,118 @@ describe('CropperPreview', () => {
     const viewer = document.querySelector('cropper-viewer');
     expect(viewer).toHaveClass('thumb');
     expect(viewer).toHaveStyle({ outlineWidth: '2px' });
+  });
+
+  describe('custom shape', () => {
+    const star: CropperShapeDefinition = {
+      path: 'M 12 2 L 15 9 L 22 9 L 17 14 L 18 21 L 12 17 L 6 21 L 7 14 L 2 9 L 9 9 Z',
+      viewBox: [-2, 1, 24, 24],
+    };
+
+    function ShapeHarness({
+      shapes,
+    }: {
+      shapes: CropperShapeDefinition[];
+    }): React.JSX.Element {
+      const cropperRef = useRef<CropperRef>(null);
+      return (
+        <div>
+          <Cropper ref={cropperRef} src="/test-image.jpg" />
+          {shapes.map((shape, index) => (
+            <CropperPreview
+              key={index}
+              cropperRef={cropperRef}
+              width={64}
+              height={64}
+              shape={shape}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    async function renderViewers(
+      shapes: CropperShapeDefinition[]
+    ): Promise<HTMLElement[]> {
+      render(<ShapeHarness shapes={shapes} />);
+
+      await waitFor(() => {
+        expect(document.querySelectorAll('cropper-viewer')).toHaveLength(
+          shapes.length
+        );
+      });
+
+      return Array.from(document.querySelectorAll('cropper-viewer'));
+    }
+
+    function clipPathFor(element: HTMLElement): SVGClipPathElement | null {
+      const id = /url\(#(.+)\)/.exec(element.style.clipPath)?.[1] ?? '';
+      return document.getElementById(id) as SVGClipPathElement | null;
+    }
+
+    it('clips the viewer to a clip path built from the shape', async () => {
+      const [viewer] = await renderViewers([star]);
+      const clipPath = clipPathFor(viewer as HTMLElement);
+
+      expect(clipPath?.tagName).toBe('clipPath');
+      expect(clipPath?.querySelector('path')).toHaveAttribute('d', star.path);
+    });
+
+    it('scales the clip path with the thumbnail, honouring the viewBox origin', async () => {
+      const [viewer] = await renderViewers([star]);
+      const clipPath = clipPathFor(viewer as HTMLElement);
+
+      // objectBoundingBox spans 0–1 of the clipped element, so the viewBox is
+      // normalised into that unit square rather than given in pixels.
+      expect(clipPath).toHaveAttribute('clipPathUnits', 'objectBoundingBox');
+      expect(clipPath?.querySelector('path')).toHaveAttribute(
+        'transform',
+        `scale(${String(1 / 24)} ${String(1 / 24)}) translate(2 -1)`
+      );
+    });
+
+    it('does not round the thumbnail', async () => {
+      const [viewer] = await renderViewers([star]);
+
+      expect((viewer as HTMLElement).style.borderRadius).toBe('');
+    });
+
+    it('gives each preview its own clip path id', async () => {
+      const viewers = await renderViewers([star, star]);
+      const ids = viewers.map((viewer) => viewer.style.clipPath);
+
+      expect(new Set(ids).size).toBe(2);
+      expect(viewers.every((viewer) => clipPathFor(viewer))).toBe(true);
+    });
+
+    it('clips the placeholder too, so the shape does not pop in', () => {
+      render(
+        <CropperPreview cropperRef={createRef()} width={64} shape={star} />
+      );
+
+      const placeholder = screen.getByTestId('cropper-preview-placeholder');
+      expect(clipPathFor(placeholder)).not.toBeNull();
+    });
+
+    it('falls back to an unclipped thumbnail for an invalid shape', () => {
+      const warn = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => undefined);
+
+      render(
+        <CropperPreview
+          cropperRef={createRef()}
+          width={64}
+          shape={{ path: 'M0 0Z', viewBox: [0, 0, 0, 0] }}
+        />
+      );
+
+      const placeholder = screen.getByTestId('cropper-preview-placeholder');
+      expect(placeholder.style.clipPath).toBe('');
+      expect(document.querySelector('clipPath')).not.toBeInTheDocument();
+
+      warn.mockRestore();
+    });
   });
 
   describe('resize', () => {

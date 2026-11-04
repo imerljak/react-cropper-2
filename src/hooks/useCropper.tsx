@@ -3,7 +3,13 @@ import {
   useCropperAdvanced,
   type UseCropperAdvancedOptions,
 } from './useCropperAdvanced';
-import { getSelectionShapeStyle, resolveAspectRatio } from '../utils/shape';
+import { useResolvedShape } from './useResolvedShape';
+import { ShapeOverlay } from '../components/ShapeOverlay';
+import {
+  getSelectionShapeStyle,
+  isPathShape,
+  resolveAspectRatio,
+} from '../utils/shape';
 import type {
   CropperBounds,
   CropperCanvasElement,
@@ -57,9 +63,12 @@ export interface UseCropperOptions extends Omit<
   zoomable?: boolean;
   /** Enable multiple selections */
   multiple?: boolean;
-  /** Show selection outline */
+  /**
+   * Show the rectangular selection outline. Defaults to `true`, or `false`
+   * for custom shapes, which draw their own outline.
+   */
   outlined?: boolean;
-  /** Show canvas grid */
+  /** Show the selection grid. Defaults to `true`, or `false` for custom shapes. */
   grid?: boolean;
   /**
    * Selection shape. Defaults to `'rect'`.
@@ -67,6 +76,10 @@ export interface UseCropperOptions extends Omit<
    * `'circle'` draws a round selection and masks exports to a centred circle.
    * It also forces a 1:1 aspect ratio, since a circular selection over a
    * non-square box would not match what gets exported.
+   *
+   * A `CropperShapeDefinition` draws its path over the selection and
+   * masks exports to it, locking the selection to the path's viewBox ratio
+   * unless `stretch` is set. Invalid shapes fall back to `'rect'`.
    */
   shape?: CropperShape;
 }
@@ -193,18 +206,26 @@ export function useCropper(options: UseCropperOptions): UseCropperReturn {
     resizable = true,
     zoomable = true,
     multiple = false,
-    outlined = true,
-    grid = true,
+    outlined,
+    grid,
     shape = 'rect',
     ...advancedOptions
   } = options;
 
-  const effectiveAspectRatio = resolveAspectRatio(shape, aspectRatio);
+  const resolvedShape = useResolvedShape(shape);
+  const effectiveAspectRatio = useMemo(
+    () => resolveAspectRatio(resolvedShape, aspectRatio),
+    [resolvedShape, aspectRatio]
+  );
   // Memoised so renderCropper's identity does not change on every render.
   const selectionShapeStyle = useMemo(
-    () => getSelectionShapeStyle(shape),
-    [shape]
+    () => getSelectionShapeStyle(resolvedShape),
+    [resolvedShape]
   );
+  // The rectangular outline and grid clash with a custom outline, so they
+  // default off for custom shapes. Explicit props still win.
+  const showOutline = outlined ?? !isPathShape(resolvedShape);
+  const showGrid = grid ?? !isPathShape(resolvedShape);
 
   const {
     canvasRef,
@@ -232,7 +253,7 @@ export function useCropper(options: UseCropperOptions): UseCropperReturn {
     getImage,
   } = useCropperAdvanced({
     ...advancedOptions,
-    shape,
+    shape: resolvedShape,
     autoInitialize: true,
   });
 
@@ -266,10 +287,13 @@ export function useCropper(options: UseCropperOptions): UseCropperReturn {
             resizable={resizable}
             zoomable={zoomable}
             multiple={multiple}
-            outlined={outlined}
+            outlined={showOutline}
             style={selectionShapeStyle}
           >
-            {grid && <cropper-grid role="grid" bordered covered />}
+            {showGrid && <cropper-grid role="grid" bordered covered />}
+            {isPathShape(resolvedShape) && (
+              <ShapeOverlay shape={resolvedShape} />
+            )}
             <cropper-crosshair centered />
             <cropper-handle
               action="move"
@@ -306,9 +330,10 @@ export function useCropper(options: UseCropperOptions): UseCropperReturn {
       resizable,
       zoomable,
       multiple,
-      outlined,
-      grid,
+      showOutline,
+      showGrid,
       selectionShapeStyle,
+      resolvedShape,
     ]
   );
 

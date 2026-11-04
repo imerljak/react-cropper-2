@@ -1,4 +1,9 @@
-import type { CropperShape, ExportOptions } from '../types';
+import type { ExportOptions } from '../types';
+import {
+  isPathShape,
+  type ResolvedPathShape,
+  type ResolvedShape,
+} from './shape';
 
 /** Matches the browser default for `toDataURL` / `toBlob`. */
 const DEFAULT_QUALITY = 0.92;
@@ -75,6 +80,46 @@ export function maskToCircle(source: HTMLCanvasElement): HTMLCanvasElement {
 }
 
 /**
+ * Clips `source` to a custom path, mapped from its viewBox onto the canvas.
+ *
+ * The mapping is a per-axis scale, so it matches the on-screen overlay drawn
+ * with `preserveAspectRatio="none"` at any output size. Pixels outside the
+ * path are left transparent.
+ */
+export function maskToPath(
+  source: HTMLCanvasElement,
+  shape: ResolvedPathShape
+): HTMLCanvasElement {
+  const created = createCanvas(source.width, source.height);
+  if (!created) return source;
+
+  const { canvas, context } = created;
+  const [minX, minY, viewBoxWidth, viewBoxHeight] = shape.viewBox;
+
+  context.save();
+  // Canvas transforms apply last-first: points are shifted to the origin,
+  // then scaled into canvas pixels.
+  context.scale(canvas.width / viewBoxWidth, canvas.height / viewBoxHeight);
+  context.translate(-minX, -minY);
+  context.clip(new Path2D(shape.path));
+  // The image is drawn in canvas pixels, not viewBox units.
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.drawImage(source, 0, 0);
+  context.restore();
+
+  return canvas;
+}
+
+function applyShapeMask(
+  source: HTMLCanvasElement,
+  shape: ResolvedShape
+): HTMLCanvasElement {
+  if (shape === 'circle') return maskToCircle(source);
+  if (isPathShape(shape)) return maskToPath(source, shape);
+  return source;
+}
+
+/**
  * Applies shape and background post-processing to a freshly cropped canvas.
  *
  * Order matters: the mask runs first, then the fill is painted behind the
@@ -84,11 +129,11 @@ export function maskToCircle(source: HTMLCanvasElement): HTMLCanvasElement {
 export function applyExportEffects(
   source: HTMLCanvasElement,
   options: ExportOptions = {},
-  shape: CropperShape = 'rect'
+  shape: ResolvedShape = 'rect'
 ): HTMLCanvasElement {
   const { mimeType = 'image/png', fillColor } = options;
 
-  let result = shape === 'circle' ? maskToCircle(source) : source;
+  let result = applyShapeMask(source, shape);
 
   // Only fill when asked, or when the format would turn transparency black.
   const needsOpaqueBackground = OPAQUE_MIME_TYPES.has(mimeType);
